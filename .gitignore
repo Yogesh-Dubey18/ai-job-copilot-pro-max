@@ -4,6 +4,7 @@ node_modules/
 .env.*.local
 dist/
 .next/
+.next-*/
 out/
 build/
 coverage/

@@ -1,6 +1,17 @@
 import 'server-only';
 import { cookies } from 'next/headers';
-import { AdminOverview, AnalyticsSummary, Application, ApplicationStats } from '@/types';
+import {
+  AdminOverview,
+  AnalyticsSummary,
+  Application,
+  ApplicationStats,
+  DailyDigest,
+  Job,
+  Portfolio,
+  RecommendedJob,
+  Resume,
+  UserProfile
+} from '@/types';
 
 const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -65,5 +76,45 @@ export async function getAnalytics() {
 
 export async function getAdminOverview() {
   const response = await backendFetch<ApiEnvelope<AdminOverview>>('/api/admin/overview');
+  return response.data;
+}
+
+export async function getProfile() {
+  const response = await backendFetch<ApiEnvelope<UserProfile>>('/api/profile');
+  return response.data;
+}
+
+export async function getTodayJobs() {
+  const response = await backendFetch<ApiEnvelope<Job[]>>('/api/jobs/today');
+  return response.data;
+}
+
+export async function getRecommendedJobs() {
+  const response = await backendFetch<ApiEnvelope<RecommendedJob[]>>('/api/jobs/recommended');
+  return response.data;
+}
+
+export async function getJob(id: string) {
+  const response = await backendFetch<ApiEnvelope<Job>>(`/api/jobs/${id}`);
+  return response.data;
+}
+
+export async function getResumes() {
+  const response = await backendFetch<ApiEnvelope<Resume[]>>('/api/resumes');
+  return response.data;
+}
+
+export async function getDailyDigest() {
+  const response = await backendFetch<ApiEnvelope<DailyDigest>>('/api/daily-digest');
+  return response.data;
+}
+
+export async function getPortfolio() {
+  const response = await backendFetch<ApiEnvelope<Portfolio | null>>('/api/portfolio');
+  return response.data;
+}
+
+export async function getPublicPortfolio(username: string) {
+  const response = await backendFetch<ApiEnvelope<Portfolio>>(`/api/portfolio/public/${username}`);
   return response.data;
 }

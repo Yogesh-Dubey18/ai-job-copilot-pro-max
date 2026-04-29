@@ -2,14 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, BriefcaseBusiness, LayoutDashboard, LogOut, Settings, Shield, Sparkles } from 'lucide-react';
+import { BarChart3, BookOpenCheck, BriefcaseBusiness, FileText, LayoutDashboard, LogOut, Settings, Shield, Sparkles, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/jobs', label: 'Jobs', icon: BriefcaseBusiness },
   { href: '/applications', label: 'Applications', icon: BriefcaseBusiness },
+  { href: '/resume', label: 'Resume', icon: FileText },
+  { href: '/interview', label: 'Interview', icon: BookOpenCheck },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/tools', label: 'AI Tools', icon: Sparkles },
+  { href: '/profile', label: 'Profile', icon: UserRound },
   { href: '/admin', label: 'Admin', icon: Shield },
   { href: '/settings', label: 'Settings', icon: Settings }
 ];
