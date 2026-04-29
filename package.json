@@ -8,9 +8,15 @@
   ],
   "scripts": {
     "install:all": "npm install --workspaces",
+    "dev": "concurrently -n web,api \"npm run dev --workspace frontend\" \"npm run dev --workspace backend\"",
+    "build": "npm run build --workspace backend && npm run build --workspace frontend",
     "dev:backend": "npm run dev --workspace backend",
     "dev:frontend": "npm run dev --workspace frontend",
     "build:backend": "npm run build --workspace backend",
-    "build:frontend": "npm run build --workspace frontend"
+    "build:frontend": "npm run build --workspace frontend",
+    "typecheck": "npm run build --workspace backend && npm run build --workspace frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

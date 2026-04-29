@@ -19,7 +19,7 @@ export default function LoginPage() {
 
     try {
       const response = await authApi.login(email, password);
-      localStorage.setItem('ai_job_copilot_token', response.token);
+      void response;
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

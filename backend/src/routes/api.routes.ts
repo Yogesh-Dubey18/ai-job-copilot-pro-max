@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createApplyPack } from '../controllers/ai.controller';
-import { login, me, register } from '../controllers/auth.controller';
+import { login, logout, me, register } from '../controllers/auth.controller';
 import {
   applicationStats,
   createApplication,
@@ -17,6 +17,7 @@ const router = Router();
 
 router.post('/auth/register', register);
 router.post('/auth/login', login);
+router.post('/auth/logout', logout);
 router.get('/auth/me', protect, me);
 
 router.post('/ai/apply-pack', createApplyPack);

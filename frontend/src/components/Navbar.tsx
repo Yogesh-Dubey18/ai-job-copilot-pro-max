@@ -2,21 +2,23 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BriefcaseBusiness, LayoutDashboard, LogOut } from 'lucide-react';
+import { BriefcaseBusiness, LayoutDashboard, LogOut, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/applications', label: 'Applications', icon: BriefcaseBusiness }
+  { href: '/applications', label: 'Applications', icon: BriefcaseBusiness },
+  { href: '/settings', label: 'Settings', icon: Settings }
 ];
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const logout = () => {
-    localStorage.removeItem('ai_job_copilot_token');
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     router.push('/login');
+    router.refresh();
   };
 
   return (

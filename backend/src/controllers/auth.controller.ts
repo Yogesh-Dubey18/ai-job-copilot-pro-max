@@ -71,3 +71,7 @@ export const me = asyncHandler(async (req: any, res) => {
   const user = await User.findById(req.user.id).select('-passwordHash');
   res.json({ success: true, user });
 });
+
+export const logout = asyncHandler(async (_req, res) => {
+  res.json({ success: true, message: 'Logged out.' });
+});

@@ -20,7 +20,7 @@ export default function RegisterPage() {
 
     try {
       const response = await authApi.register(name, email, password);
-      localStorage.setItem('ai_job_copilot_token', response.token);
+      void response;
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
