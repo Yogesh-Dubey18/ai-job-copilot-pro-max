@@ -24,6 +24,7 @@ jobs:
             ${{ runner.os }}-next-${{ hashFiles('**/package-lock.json') }}-
       - run: npm ci
       - run: npm run build --workspace backend
+      - run: npm run lint --workspace frontend
       - run: npm run typecheck --workspace frontend
       - run: npm run test --workspace frontend
       - run: npm run build --workspace frontend

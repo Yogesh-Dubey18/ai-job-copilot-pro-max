@@ -1,6 +1,6 @@
 import 'server-only';
 import { cookies } from 'next/headers';
-import { AnalyticsSummary, Application, ApplicationStats } from '@/types';
+import { AdminOverview, AnalyticsSummary, Application, ApplicationStats } from '@/types';
 
 const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -60,5 +60,10 @@ export async function getApplications() {
 
 export async function getAnalytics() {
   const response = await backendFetch<ApiEnvelope<AnalyticsSummary>>('/api/applications/analytics');
+  return response.data;
+}
+
+export async function getAdminOverview() {
+  const response = await backendFetch<ApiEnvelope<AdminOverview>>('/api/admin/overview');
   return response.data;
 }

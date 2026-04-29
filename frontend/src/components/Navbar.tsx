@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, BriefcaseBusiness, LayoutDashboard, LogOut, Settings, Sparkles } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, LayoutDashboard, LogOut, Settings, Shield, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const links = [
@@ -10,6 +10,7 @@ const links = [
   { href: '/applications', label: 'Applications', icon: BriefcaseBusiness },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/tools', label: 'AI Tools', icon: Sparkles },
+  { href: '/admin', label: 'Admin', icon: Shield },
   { href: '/settings', label: 'Settings', icon: Settings }
 ];
 

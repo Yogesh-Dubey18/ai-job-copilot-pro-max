@@ -58,6 +58,14 @@ Open:
 http://localhost:3000
 ```
 
+Docker local topology:
+
+```bash
+docker compose up --build
+```
+
+This starts MongoDB, the Express backend, and the Next.js frontend for long-running local development.
+
 Health check:
 
 ```text

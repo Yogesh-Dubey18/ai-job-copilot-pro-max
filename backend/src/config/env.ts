@@ -13,6 +13,10 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   ADZUNA_APP_ID: z.string().optional(),
   ADZUNA_APP_KEY: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z.string().optional(),
+  SENTRY_DSN: z.string().optional(),
   ADMIN_NAME: z.string().default('Admin User'),
   ADMIN_EMAIL: z.string().email().default('admin@example.com'),
   ADMIN_PASSWORD: z.string().min(8).default('ChangeMe123!')

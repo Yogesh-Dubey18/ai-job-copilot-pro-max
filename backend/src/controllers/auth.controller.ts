@@ -4,6 +4,7 @@ import User from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { generateToken } from '../utils/generateToken';
+import { createRecoveryCodes, createSecureToken, hashToken } from '../services/security.service';
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -13,7 +14,8 @@ const registerSchema = z.object({
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1)
+  password: z.string().min(1),
+  mfaCode: z.string().optional()
 });
 
 const formatUser = (user: any) => ({
@@ -36,7 +38,8 @@ export const register = asyncHandler(async (req, res) => {
   const user = await User.create({
     name: data.name,
     email: data.email.toLowerCase(),
-    passwordHash
+    passwordHash,
+    emailVerified: false
   });
 
   res.status(201).json({
@@ -60,6 +63,15 @@ export const login = asyncHandler(async (req, res) => {
     throw new AppError('Invalid email or password.', 401);
   }
 
+  if (user.mfa?.enabled && data.mfaCode !== '000000') {
+    res.status(202).json({
+      success: false,
+      mfaRequired: true,
+      message: 'MFA code required. Demo fallback code is 000000 until a real authenticator provider is configured.'
+    });
+    return;
+  }
+
   res.json({
     success: true,
     token: generateToken(user._id.toString()),
@@ -74,4 +86,112 @@ export const me = asyncHandler(async (req: any, res) => {
 
 export const logout = asyncHandler(async (_req, res) => {
   res.json({ success: true, message: 'Logged out.' });
+});
+
+export const requestEmailVerification = asyncHandler(async (req, res) => {
+  const schema = z.object({ email: z.string().email() });
+  const { email } = schema.parse(req.body);
+  const user = await User.findOne({ email: email.toLowerCase() });
+
+  if (!user) {
+    res.json({ success: true, message: 'If the account exists, a verification link was generated.' });
+    return;
+  }
+
+  const token = createSecureToken();
+  user.emailVerificationTokenHash = hashToken(token);
+  user.emailVerificationExpires = new Date(Date.now() + 60 * 60 * 1000);
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Verification token generated. Configure email delivery to send this token.',
+    demoToken: token
+  });
+});
+
+export const verifyEmail = asyncHandler(async (req, res) => {
+  const schema = z.object({ token: z.string().min(1) });
+  const { token } = schema.parse(req.body);
+  const user = await User.findOne({
+    emailVerificationTokenHash: hashToken(token),
+    emailVerificationExpires: { $gt: new Date() }
+  });
+
+  if (!user) {
+    throw new AppError('Invalid or expired verification token.', 400);
+  }
+
+  user.emailVerified = true;
+  user.emailVerificationTokenHash = undefined;
+  user.emailVerificationExpires = undefined;
+  await user.save();
+
+  res.json({ success: true, message: 'Email verified.' });
+});
+
+export const requestPasswordReset = asyncHandler(async (req, res) => {
+  const schema = z.object({ email: z.string().email() });
+  const { email } = schema.parse(req.body);
+  const user = await User.findOne({ email: email.toLowerCase() });
+
+  if (!user) {
+    res.json({ success: true, message: 'If the account exists, a reset link was generated.' });
+    return;
+  }
+
+  const token = createSecureToken();
+  user.passwordResetTokenHash = hashToken(token);
+  user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000);
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Password reset token generated. Configure email delivery to send this token.',
+    demoToken: token
+  });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const schema = z.object({ token: z.string().min(1), password: z.string().min(8) });
+  const { token, password } = schema.parse(req.body);
+  const user = await User.findOne({
+    passwordResetTokenHash: hashToken(token),
+    passwordResetExpires: { $gt: new Date() }
+  });
+
+  if (!user) {
+    throw new AppError('Invalid or expired reset token.', 400);
+  }
+
+  user.passwordHash = await bcrypt.hash(password, 12);
+  user.passwordResetTokenHash = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  res.json({ success: true, message: 'Password reset complete.' });
+});
+
+export const configureMfa = asyncHandler(async (req: any, res) => {
+  const schema = z.object({ enabled: z.boolean() });
+  const { enabled } = schema.parse(req.body);
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    throw new AppError('User not found.', 404);
+  }
+
+  const recoveryCodes = enabled ? createRecoveryCodes() : [];
+  user.mfa = {
+    enabled,
+    secretHash: enabled ? hashToken(`${user.email}:${Date.now()}`) : undefined,
+    recoveryCodes: recoveryCodes.map(hashToken)
+  };
+  await user.save();
+
+  res.json({
+    success: true,
+    message: enabled ? 'MFA enabled with demo code 000000.' : 'MFA disabled.',
+    recoveryCodes: enabled ? recoveryCodes : []
+  });
 });

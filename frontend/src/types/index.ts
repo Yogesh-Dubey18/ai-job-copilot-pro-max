@@ -45,3 +45,18 @@ export interface WorkflowResult {
   draft?: string;
   fallback: boolean;
 }
+
+export interface AdminEvent {
+  _id: string;
+  level: string;
+  type: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface AdminOverview {
+  users: number;
+  jobs: number;
+  applications: number;
+  events: AdminEvent[];
+}

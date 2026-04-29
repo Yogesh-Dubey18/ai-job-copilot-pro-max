@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { getSessionToken } from '@/lib/server/backend';
+import { SecurityPanel } from '@/components/SecurityPanel';
 
 export default async function SettingsPage() {
   const token = await getSessionToken();
@@ -16,6 +17,7 @@ export default async function SettingsPage() {
         <p className="mt-2 text-slate-600">Production security and integration posture for your workspace.</p>
 
         <div className="mt-8 grid gap-4">
+          <SecurityPanel />
           {[
             ['Session security', 'Authenticated routes use an httpOnly cookie session through the Next.js BFF.'],
             ['AI generation', 'Gemini calls stay server-side in the Express backend and return a safe fallback on failure.'],
