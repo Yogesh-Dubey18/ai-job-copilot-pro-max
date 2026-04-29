@@ -5,12 +5,14 @@ import { Bot, Sparkles, X } from 'lucide-react';
 import { useState, useTransition } from 'react';
 
 const actions = [
-  ['analyze-job', 'Analyze this job'],
-  ['tailor-resume', 'Tailor my resume'],
-  ['cover-letter', 'Generate cover letter'],
-  ['interview', 'Prepare interview'],
-  ['follow-up', 'Write follow-up email'],
-  ['rejection', 'Why was I rejected?'],
+  ['analyze-job', 'Analyze my resume'],
+  ['today', 'Find best jobs for me'],
+  ['tailor-resume', 'Tailor resume for this job'],
+  ['cover-letter', 'Generate Application Kit'],
+  ['today', 'I applied manually'],
+  ['follow-up', 'Reply to company'],
+  ['interview', 'Prepare interview round'],
+  ['rejection', 'Explain rejection'],
   ['today', 'What should I do today?']
 ];
 
@@ -30,7 +32,11 @@ export function AIAssistantPopup() {
         body: JSON.stringify({ action, route: pathname, mentorMode })
       });
       const payload = await result.json().catch(() => ({}));
-      setResponse(payload.data?.summary || payload.message || 'Assistant fallback: review your highest-fit job and take one clear next step.');
+      setResponse(
+        payload.data?.summary ||
+          payload.message ||
+          'Assistant fallback: upload resume at /resume/upload, track manual applications in job details, and configure Gemini/Gmail/job APIs in Settings when ready.'
+      );
     });
   };
 

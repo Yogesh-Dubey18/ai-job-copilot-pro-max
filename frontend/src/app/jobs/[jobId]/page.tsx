@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { JobActions } from '@/components/JobActions';
+import { ManualApplyForm } from '@/components/ManualApplyForm';
 import { getJob, getSessionToken, getTodayJobs } from '@/lib/server/backend';
 
 export default async function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
@@ -52,6 +53,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
               Open original job
             </a>
           ) : null}
+        </section>
+        <section className="mt-8">
+          <ManualApplyForm jobId={job._id} />
         </section>
         <section className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold">Similar jobs</h2>

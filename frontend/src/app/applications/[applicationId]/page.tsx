@@ -1,5 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { ManualApplyForm } from '@/components/ManualApplyForm';
+import { ResponseAssistantForm } from '@/components/ResponseAssistantForm';
+import { StatusBadge } from '@/components/StatusBadge';
 import { getApplications, getSessionToken } from '@/lib/server/backend';
 
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
@@ -19,7 +22,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-sm font-semibold text-slate-500">Status</dt>
-              <dd className="mt-1 text-lg font-bold capitalize">{application.status}</dd>
+              <dd className="mt-1"><StatusBadge status={application.status} /></dd>
             </div>
             <div>
               <dt className="text-sm font-semibold text-slate-500">Match score</dt>
@@ -34,6 +37,32 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
               <dd className="mt-1">{application.followUpDate || 'No follow-up scheduled'}</dd>
             </div>
           </dl>
+        </section>
+        <section className="mt-8 grid gap-6">
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold">Next-best action</h2>
+            <p className="mt-3 text-sm text-slate-600">
+              {application.status === 'rejected'
+                ? 'Run rejection analysis, adjust resume keywords, and apply to stronger-fit jobs.'
+                : application.status.includes('interview')
+                  ? 'Prepare role stories, project explanations, HR answers, and follow-up notes.'
+                  : 'Complete the manual apply checklist and set a follow-up reminder.'}
+            </p>
+          </div>
+          <ManualApplyForm applicationId={application._id} />
+          <ResponseAssistantForm applicationId={application._id} />
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold">Timeline</h2>
+            <div className="mt-4 grid gap-3">
+              {(application.timeline || []).map((item, index) => (
+                <div key={`${item.date}-${index}`} className="rounded-md bg-slate-50 p-3 text-sm">
+                  <p className="font-semibold">{item.status.replaceAll('_', ' ')}</p>
+                  <p className="text-slate-600">{item.note}</p>
+                  <p className="mt-1 text-xs text-slate-500">{item.source || 'user'} · {item.nextAction || 'Review next action'}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
     </AppShell>

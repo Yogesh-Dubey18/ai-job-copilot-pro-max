@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AI Job Copilot</title>
+    <style>
+      body { width: 320px; font-family: Arial, sans-serif; margin: 0; padding: 16px; color: #0f172a; }
+      button { width: 100%; margin-top: 8px; padding: 10px; border: 0; border-radius: 6px; background: #0f172a; color: white; font-weight: 700; }
+      .light { background: #e2e8f0; color: #0f172a; }
+      pre { white-space: pre-wrap; background: #f8fafc; padding: 10px; border-radius: 6px; font-size: 12px; }
+      p { color: #475569; }
+    </style>
+  </head>
+  <body>
+    <h1>AI Job Copilot</h1>
+    <p>Safe mode: this extension can save, analyze, and guide. It never final-submits applications.</p>
+    <button id="save">Save job</button>
+    <button id="analyze" class="light">Analyze job</button>
+    <button id="kit" class="light">Generate Application Kit</button>
+    <button id="manual" class="light">Mark manually applied</button>
+    <pre id="status">Ready.</pre>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -20,7 +20,8 @@
     }
   ],
   "action": {
-    "default_title": "Save Job to Copilot"
+    "default_title": "Save Job to Copilot",
+    "default_popup": "popup.html"
   },
   "options_page": "options.html"
 }

@@ -25,6 +25,10 @@ const resumeSchema = new mongoose.Schema(
       projects: { type: String, default: '' }
     },
     atsScore: { type: Number, default: 0 },
+    appliedCount: { type: Number, default: 0 },
+    responseCount: { type: Number, default: 0 },
+    interviewCount: { type: Number, default: 0 },
+    offerCount: { type: Number, default: 0 },
     isPrivate: { type: Boolean, default: true },
     versions: { type: [resumeVersionSchema], default: [] }
   },

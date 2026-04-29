@@ -11,8 +11,11 @@ import { StatusBadge } from './StatusBadge';
 
 const statuses: ApplicationStatus[] = [
   'saved',
+  'preparing',
+  'manually_applied',
   'resume_tailored',
   'applied',
+  'viewed',
   'recruiter_viewed',
   'shortlisted',
   'assessment',

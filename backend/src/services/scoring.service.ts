@@ -44,7 +44,7 @@ export const scoreJob = (profileText: string, resumeText: string, jobDescription
   );
 
   const applyPriority =
-    finalScore >= 85 ? 'Apply Now' : finalScore >= 70 ? 'Tailor Resume First' : finalScore >= 50 ? 'Improve Skills First' : 'Skip';
+    finalScore >= 85 ? 'Apply Now' : finalScore >= 70 ? 'Tailor First' : finalScore >= 50 ? 'Improve Skills First' : 'Skip';
 
   return {
     finalScore,
@@ -62,7 +62,7 @@ export const scoreJob = (profileText: string, resumeText: string, jobDescription
     aiRecommendation:
       applyPriority === 'Apply Now'
         ? 'Apply today with a tailored resume and recruiter message.'
-        : applyPriority === 'Tailor Resume First'
+        : applyPriority === 'Tailor First'
           ? 'Tailor your resume keywords before applying.'
           : applyPriority === 'Improve Skills First'
             ? 'Close the missing skill gaps before prioritizing this role.'

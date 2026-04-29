@@ -2,20 +2,26 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, BookOpenCheck, BriefcaseBusiness, FileText, LayoutDashboard, LogOut, Settings, Shield, Sparkles, UserRound } from 'lucide-react';
+import { Bot, BriefcaseBusiness, ChevronDown, FileText, LayoutDashboard, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const links = [
+const mainLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/jobs', label: 'Jobs', icon: BriefcaseBusiness },
-  { href: '/applications', label: 'Applications', icon: BriefcaseBusiness },
   { href: '/resume', label: 'Resume', icon: FileText },
-  { href: '/interview', label: 'Interview', icon: BookOpenCheck },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/tools', label: 'AI Tools', icon: Sparkles },
-  { href: '/profile', label: 'Profile', icon: UserRound },
-  { href: '/admin', label: 'Admin', icon: Shield },
-  { href: '/settings', label: 'Settings', icon: Settings }
+  { href: '/applications', label: 'Applications', icon: BriefcaseBusiness },
+  { href: '/tools', label: 'AI Assistant', icon: Bot }
+];
+
+const moreLinks = [
+  { href: '/analytics', label: 'Analytics' },
+  { href: '/portfolio', label: 'Portfolio' },
+  { href: '/responses', label: 'Responses' },
+  { href: '/daily-digest', label: 'Daily Digest' },
+  { href: '/interview', label: 'Interview' },
+  { href: '/profile', label: 'Profile' },
+  { href: '/settings', label: 'Settings' },
+  { href: '/admin', label: 'Admin' }
 ];
 
 export function Navbar() {
@@ -35,7 +41,7 @@ export function Navbar() {
           AI Job Copilot Pro MAX
         </Link>
         <div className="flex items-center gap-2">
-          {links.map((link) => {
+          {mainLinks.map((link) => {
             const Icon = link.icon;
             return (
               <Link
@@ -51,6 +57,18 @@ export function Navbar() {
               </Link>
             );
           })}
+          <div className="group relative">
+            <button type="button" className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
+              More <ChevronDown className="h-4 w-4" />
+            </button>
+            <div className="invisible absolute right-0 top-full w-48 rounded-lg border border-slate-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
+              {moreLinks.map((link) => (
+                <Link key={link.href} href={link.href} className="block rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
           <button
             type="button"
             onClick={logout}

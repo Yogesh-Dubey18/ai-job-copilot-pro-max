@@ -20,10 +20,21 @@ export default async function DashboardPage() {
       <div className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-4xl font-black tracking-tight">Mission Control</h1>
-            <p className="mt-2 text-slate-600">Server-rendered pipeline summary with secure cookie-backed auth.</p>
+            <h1 className="text-4xl font-black tracking-tight">Job Search Dashboard</h1>
+            <p className="mt-2 text-slate-600">Mission Control for your resume, jobs, manual applications, and interviews.</p>
           </div>
         </div>
+
+        <section className="mb-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="font-bold">First-time checklist</h2>
+          <div className="mt-4 grid gap-2 sm:grid-cols-5">
+            {['Upload Resume', 'Set Target Role', 'Get Job Matches', 'Generate Application Kit', 'Track Applications'].map((item) => (
+              <a key={item} href={item === 'Upload Resume' ? '/resume/upload' : item === 'Get Job Matches' ? '/jobs' : item === 'Track Applications' ? '/applications' : '/profile'} className="rounded-md bg-slate-50 px-3 py-2 text-sm font-semibold hover:bg-slate-100">
+                {item}
+              </a>
+            ))}
+          </div>
+        </section>
 
         <BentoGrid stats={stats} />
 

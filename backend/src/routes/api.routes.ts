@@ -33,6 +33,8 @@ import {
   getJob,
   listApplications,
   listJobs,
+  generateCompanyResponse,
+  manualApply,
   saveFromExtension,
   updateApplicationStatus
 } from '../controllers/jobs.controller';
@@ -80,7 +82,9 @@ router.post('/jobs/:id/analyze', protect, analyzeJob);
 
 router.get('/applications', protect, listApplications);
 router.post('/applications', protect, createApplication);
+router.post('/applications/manual-apply', protect, manualApply);
 router.patch('/applications/:id/status', protect, updateApplicationStatus);
+router.post('/applications/:id/response', protect, generateCompanyResponse);
 router.get('/applications/stats', protect, applicationStats);
 router.get('/applications/analytics', protect, applicationAnalytics);
 

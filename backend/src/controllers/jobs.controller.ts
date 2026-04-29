@@ -34,6 +34,34 @@ const applicationSchema = z.object({
   missingSkills: z.array(z.string()).optional()
 });
 
+const manualApplySchema = z.object({
+  jobId: z.string().optional(),
+  applicationId: z.string().optional(),
+  dateApplied: z.string().optional(),
+  portalSource: z.string().optional(),
+  resumeVersionUsed: z.string().optional(),
+  coverLetterUsed: z.string().optional(),
+  contactName: z.string().optional(),
+  notes: z.string().optional(),
+  followUpDate: z.string().optional(),
+  checklist: z
+    .object({
+      resumeTailored: z.boolean().default(false),
+      coverLetterReady: z.boolean().default(false),
+      portfolioReady: z.boolean().default(false),
+      formSubmitted: z.boolean().default(true),
+      confirmationSaved: z.boolean().default(false),
+      followUpReminderSet: z.boolean().default(false)
+    })
+    .optional()
+});
+
+const responseSchema = z.object({
+  companyMessage: z.string().min(1),
+  intent: z.enum(['accept', 'negotiate', 'ask_question', 'decline_politely', 'request_more_info']),
+  tone: z.enum(['professional', 'confident', 'polite', 'hinglish-friendly', 'short']).default('professional')
+});
+
 export const listJobs = asyncHandler(async (req, res) => {
   const query: Record<string, any> = {};
   const search = String(req.query.role || req.query.q || '').trim();
@@ -71,6 +99,86 @@ export const getJob = asyncHandler(async (req, res) => {
   }
 
   res.json({ success: true, data: job });
+});
+
+export const manualApply = asyncHandler(async (req: any, res) => {
+  const data = manualApplySchema.parse(req.body);
+  let application = data.applicationId
+    ? await Application.findOne({ _id: data.applicationId, userId: req.user.id })
+    : null;
+  const job = data.jobId ? await Job.findById(data.jobId) : null;
+
+  if (!application) {
+    application = await Application.create({
+      userId: req.user.id,
+      jobId: job?._id,
+      title: job?.title || 'Manual Application',
+      company: job?.company || 'Company',
+      status: 'manually_applied'
+    });
+  }
+
+  application.status = 'manually_applied';
+  application.appliedDate = data.dateApplied ? new Date(data.dateApplied) : new Date();
+  application.followUpDate = data.followUpDate ? new Date(data.followUpDate) : application.followUpDate;
+  application.portalSource = data.portalSource || application.portalSource;
+  application.resumeVersionUsed = data.resumeVersionUsed || application.resumeVersionUsed;
+  application.coverLetterUsed = data.coverLetterUsed || application.coverLetterUsed;
+  application.contactName = data.contactName || application.contactName;
+  application.notes = data.notes || application.notes;
+  application.manualChecklist = {
+    resumeTailored: Boolean(data.checklist?.resumeTailored),
+    coverLetterReady: Boolean(data.checklist?.coverLetterReady),
+    portfolioReady: Boolean(data.checklist?.portfolioReady),
+    formSubmitted: data.checklist?.formSubmitted ?? true,
+    confirmationSaved: Boolean(data.checklist?.confirmationSaved),
+    followUpReminderSet: Boolean(data.checklist?.followUpReminderSet || data.followUpDate)
+  };
+  application.timeline.push({
+    status: 'manually_applied',
+    note: data.notes || 'User confirmed manual application submission.',
+    source: data.portalSource || 'manual_apply',
+    nextAction: 'Track response and follow up on schedule.',
+    date: new Date()
+  });
+  await application.save();
+
+  res.json({ success: true, data: application });
+});
+
+export const generateCompanyResponse = asyncHandler(async (req: any, res) => {
+  const data = responseSchema.parse(req.body);
+  const application = await Application.findOne({ _id: req.params.id, userId: req.user.id });
+  if (!application) throw new AppError('Application not found.', 404);
+
+  const subject = `${application.title} - Response to ${application.company}`;
+  const shortReply =
+    data.intent === 'negotiate'
+      ? 'Thank you for the update. I am interested and would like to discuss the details so we can find a fair fit.'
+      : data.intent === 'decline_politely'
+        ? 'Thank you for considering me. I appreciate the opportunity, but I will not be moving forward at this time.'
+        : 'Thank you for reaching out. I am interested and happy to continue the process.';
+  const response = {
+    type: 'company_reply',
+    companyMessage: data.companyMessage,
+    intent: data.intent,
+    tone: data.tone,
+    subject,
+    shortReply,
+    detailedReply: `${shortReply}\n\nRegarding your message: "${data.companyMessage.slice(0, 500)}"\n\nPlease let me know the next step, timeline, and any details you need from my side.`,
+    shortChannelReply: shortReply,
+    warnings: ['Do not share Aadhaar/PAN, bank details, passwords, OTPs, or original documents before verifying the employer.']
+  };
+  application.responses.push(response);
+  application.timeline.push({
+    status: application.status,
+    note: `Generated ${data.tone} company reply.`,
+    source: 'ai_response_assistant',
+    nextAction: 'Review and send manually after checking accuracy.',
+    date: new Date()
+  });
+  await application.save();
+  res.json({ success: true, data: response });
 });
 
 export const saveFromExtension = asyncHandler(async (req, res) => {
@@ -163,7 +271,7 @@ export const applicationAnalytics = asyncHandler(async (req: any, res) => {
   const total = applications.length;
   const interviews = applications.filter((item) => ['interview_round_1', 'interview_round_2', 'hr_round'].includes(item.status)).length;
   const offers = applications.filter((item) => item.status === 'offered').length;
-  const responses = applications.filter((item) => !['saved', 'resume_tailored', 'applied', 'rejected'].includes(item.status)).length;
+  const responses = applications.filter((item) => !['saved', 'preparing', 'resume_tailored', 'applied', 'manually_applied', 'rejected'].includes(item.status)).length;
   const avgMatchScore = total
     ? Math.round(applications.reduce((sum, item) => sum + (item.matchScore || 0), 0) / total)
     : 0;
@@ -186,8 +294,11 @@ export const applicationAnalytics = asyncHandler(async (req: any, res) => {
 const getNextAction = (status: string) => {
   const actions: Record<string, string> = {
     saved: 'Tailor resume before applying.',
+    preparing: 'Finish the manual apply checklist.',
+    manually_applied: 'Save confirmation and set a follow-up reminder.',
     resume_tailored: 'Apply with the tailored resume and track the link.',
     applied: 'Schedule a follow-up in 3-5 business days.',
+    viewed: 'Prepare a concise value follow-up.',
     recruiter_viewed: 'Prepare a concise value follow-up.',
     shortlisted: 'Start interview prep for the role.',
     assessment: 'Practice the most likely technical tasks.',

@@ -1,7 +1,10 @@
 export type ApplicationStatus =
   | 'saved'
+  | 'preparing'
+  | 'manually_applied'
   | 'resume_tailored'
   | 'applied'
+  | 'viewed'
   | 'recruiter_viewed'
   | 'shortlisted'
   | 'assessment'
@@ -21,7 +24,10 @@ export interface Application {
   followUpDate?: string;
   appliedDate?: string;
   resumeVersionUsed?: string;
+  portalSource?: string;
+  notes?: string;
   timeline?: Array<{ status: ApplicationStatus; note: string; date: string; source?: string; nextAction?: string }>;
+  responses?: Array<{ subject: string; shortReply: string; detailedReply: string; shortChannelReply: string; warnings: string[] }>;
   updatedAt: string;
 }
 
@@ -112,7 +118,7 @@ export interface ScoreBreakdown {
   scamRiskScore: number;
   matchedSkills: string[];
   missingSkills: string[];
-  applyPriority: 'Apply Now' | 'Tailor Resume First' | 'Improve Skills First' | 'Skip';
+  applyPriority: 'Apply Now' | 'Tailor First' | 'Improve Skills First' | 'Skip';
   aiRecommendation: string;
 }
 

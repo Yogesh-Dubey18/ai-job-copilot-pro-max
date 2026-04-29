@@ -10,7 +10,7 @@ describe('scoreJob', () => {
     );
 
     expect(result.finalScore).toBeGreaterThan(50);
-    expect(result.applyPriority).toMatch(/Apply Now|Tailor Resume First|Improve Skills First|Skip/);
+    expect(result.applyPriority).toMatch(/Apply Now|Tailor First|Improve Skills First|Skip/);
     expect(result.matchedSkills.map((skill) => skill.toLowerCase())).toContain('react');
     expect(result).toHaveProperty('scamRiskScore');
     expect(result).toHaveProperty('atsMatchScore');

@@ -2,8 +2,11 @@ import mongoose, { InferSchemaType } from 'mongoose';
 
 export const applicationStatuses = [
   'saved',
+  'preparing',
+  'manually_applied',
   'resume_tailored',
   'applied',
+  'viewed',
   'recruiter_viewed',
   'shortlisted',
   'assessment',
@@ -30,6 +33,21 @@ const timelineSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const responseSchema = new mongoose.Schema(
+  {
+    type: { type: String, default: 'company_reply' },
+    companyMessage: { type: String, default: '' },
+    intent: { type: String, default: '' },
+    tone: { type: String, default: 'professional' },
+    subject: { type: String, default: '' },
+    shortReply: { type: String, default: '' },
+    detailedReply: { type: String, default: '' },
+    shortChannelReply: { type: String, default: '' },
+    warnings: [{ type: String }]
+  },
+  { timestamps: true }
+);
+
 const applicationSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -43,13 +61,26 @@ const applicationSchema = new mongoose.Schema(
     },
     appliedDate: { type: Date },
     followUpDate: { type: Date },
+    portalSource: { type: String, default: '' },
+    contactName: { type: String, default: '' },
+    notes: { type: String, default: '' },
     matchScore: { type: Number, min: 0, max: 100 },
     resumeVersionUsed: { type: String, default: '' },
+    coverLetterUsed: { type: String, default: '' },
+    manualChecklist: {
+      resumeTailored: { type: Boolean, default: false },
+      coverLetterReady: { type: Boolean, default: false },
+      portfolioReady: { type: Boolean, default: false },
+      formSubmitted: { type: Boolean, default: false },
+      confirmationSaved: { type: Boolean, default: false },
+      followUpReminderSet: { type: Boolean, default: false }
+    },
     tailoredResume: { type: String, default: '' },
     coverLetter: { type: String, default: '' },
     recruiterEmail: { type: String, default: '' },
     missingSkills: [{ type: String, trim: true }],
-    timeline: { type: [timelineSchema], default: [] }
+    timeline: { type: [timelineSchema], default: [] },
+    responses: { type: [responseSchema], default: [] }
   },
   { timestamps: true }
 );

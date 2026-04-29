@@ -3,8 +3,11 @@ import { cn } from '@/lib/utils';
 
 const styles: Record<ApplicationStatus, string> = {
   saved: 'bg-slate-100 text-slate-700',
+  preparing: 'bg-orange-100 text-orange-700',
+  manually_applied: 'bg-blue-100 text-blue-700',
   resume_tailored: 'bg-indigo-100 text-indigo-700',
   applied: 'bg-blue-100 text-blue-700',
+  viewed: 'bg-cyan-100 text-cyan-700',
   recruiter_viewed: 'bg-cyan-100 text-cyan-700',
   shortlisted: 'bg-sky-100 text-sky-700',
   assessment: 'bg-amber-100 text-amber-700',

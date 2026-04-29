@@ -61,10 +61,10 @@ export function BentoGrid({ stats }: { stats: ApplicationStats }) {
           <h3 className="font-semibold">Next-Step Suggestion</h3>
         </div>
         <p className="text-teal-50">
-          Generate apply packs for saved jobs with high keyword fit, then move strong targets into applied status.
+          Generate Application Kits for saved jobs with high keyword fit, then move strong targets into applied status.
         </p>
         <button className="mt-4 rounded-md bg-white px-4 py-2 font-medium text-teal-900 transition hover:bg-teal-50">
-          Deploy Apply Pack
+          Generate Application Kit
         </button>
       </motion.div>
     </div>
