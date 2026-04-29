@@ -1,9 +1,14 @@
 export type ApplicationStatus =
   | 'saved'
+  | 'resume_tailored'
   | 'applied'
-  | 'screening'
-  | 'interview'
-  | 'offer'
+  | 'recruiter_viewed'
+  | 'shortlisted'
+  | 'assessment'
+  | 'interview_round_1'
+  | 'interview_round_2'
+  | 'hr_round'
+  | 'offered'
   | 'rejected'
   | 'joined';
 
@@ -15,6 +20,8 @@ export interface Application {
   matchScore?: number;
   followUpDate?: string;
   appliedDate?: string;
+  resumeVersionUsed?: string;
+  timeline?: Array<{ status: ApplicationStatus; note: string; date: string; source?: string; nextAction?: string }>;
   updatedAt: string;
 }
 
@@ -31,9 +38,12 @@ export interface ApplicationStats {
 
 export interface AnalyticsSummary {
   total: number;
+  responseRate?: number;
   interviewRate: number;
   offerRate: number;
   avgMatchScore: number;
+  bestResumeVersion?: string;
+  bestJobSource?: string;
   recentCompanies: string[];
 }
 
@@ -84,6 +94,9 @@ export interface Job {
   description: string;
   url?: string;
   source?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  remote?: boolean;
   createdAt?: string;
 }
 
@@ -120,6 +133,15 @@ export interface Resume {
   _id: string;
   title: string;
   parsedText: string;
+  fileName?: string;
+  mimeType?: string;
+  sections?: {
+    summary?: string;
+    skills?: string[];
+    experience?: string;
+    education?: string;
+    projects?: string;
+  };
   atsScore: number;
   versions: ResumeVersion[];
   createdAt?: string;
@@ -128,6 +150,9 @@ export interface Resume {
 export interface DailyDigest {
   jobsFound: number;
   highMatchJobs: number;
+  topJobs?: Array<{ _id: string; title: string; company: string; location?: string }>;
+  urgentApplyJobs?: string[];
+  missingSkills?: string[];
   followUps: number;
   interviews: number;
   mission: string[];

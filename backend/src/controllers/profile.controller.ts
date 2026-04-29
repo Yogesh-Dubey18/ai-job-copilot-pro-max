@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import User from '../models/User';
+import Application from '../models/Application';
+import Resume from '../models/Resume';
 import { asyncHandler } from '../utils/asyncHandler';
 
 const profileSchema = z.object({
@@ -36,4 +38,13 @@ export const updateProfile = asyncHandler(async (req: any, res) => {
   ).select('-passwordHash');
 
   res.json({ success: true, data: user });
+});
+
+export const deleteAccount = asyncHandler(async (req: any, res) => {
+  await Promise.all([
+    Resume.deleteMany({ userId: req.user.id }),
+    Application.deleteMany({ userId: req.user.id }),
+    User.findByIdAndDelete(req.user.id)
+  ]);
+  res.json({ success: true, data: { deleted: true } });
 });

@@ -14,8 +14,18 @@ const resumeSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     title: { type: String, default: 'Base Resume' },
+    fileName: { type: String, default: '' },
+    mimeType: { type: String, default: 'text/plain' },
     parsedText: { type: String, required: true },
+    sections: {
+      summary: { type: String, default: '' },
+      skills: [{ type: String }],
+      experience: { type: String, default: '' },
+      education: { type: String, default: '' },
+      projects: { type: String, default: '' }
+    },
     atsScore: { type: Number, default: 0 },
+    isPrivate: { type: Boolean, default: true },
     versions: { type: [resumeVersionSchema], default: [] }
   },
   { timestamps: true }

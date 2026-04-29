@@ -20,6 +20,7 @@ export default async function AnalyticsPage() {
         <div className="mt-8 grid gap-4 md:grid-cols-4">
           {[
             ['Total roles', analytics.total],
+            ['Response rate', `${analytics.responseRate || 0}%`],
             ['Interview rate', `${analytics.interviewRate}%`],
             ['Offer rate', `${analytics.offerRate}%`],
             ['Avg match', `${analytics.avgMatchScore}%`]
@@ -30,6 +31,17 @@ export default async function AnalyticsPage() {
             </section>
           ))}
         </div>
+
+        <section className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="font-bold">Best resume version</h2>
+            <p className="mt-3 text-sm font-medium text-slate-600">{analytics.bestResumeVersion || 'Base resume'}</p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="font-bold">Best job source</h2>
+            <p className="mt-3 text-sm font-medium text-slate-600">{analytics.bestJobSource || 'Not enough data yet'}</p>
+          </div>
+        </section>
 
         <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="font-bold">Recent Companies</h2>

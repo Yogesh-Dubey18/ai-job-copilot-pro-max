@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createApplyPack, createWorkflow } from '../controllers/ai.controller';
+import { createApplyPack, createCopilot, createWorkflow } from '../controllers/ai.controller';
 import { adminOverview, syncJobs } from '../controllers/admin.controller';
 import {
   analyzeJob,
@@ -36,8 +36,8 @@ import {
   saveFromExtension,
   updateApplicationStatus
 } from '../controllers/jobs.controller';
-import { getProfile, updateProfile } from '../controllers/profile.controller';
-import { atsCheck, listResumes, resumeVersions, tailorResume, uploadResume } from '../controllers/resume.controller';
+import { deleteAccount, getProfile, updateProfile } from '../controllers/profile.controller';
+import { atsCheck, deleteResume, listResumes, resumeVersions, tailorResume, uploadResume } from '../controllers/resume.controller';
 import { protect, requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -54,15 +54,18 @@ router.post('/auth/mfa', protect, configureMfa);
 
 router.post('/ai/apply-pack', createApplyPack);
 router.post('/ai/workflow', protect, createWorkflow);
+router.post('/ai/copilot', protect, createCopilot);
 
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
+router.delete('/profile', protect, deleteAccount);
 
 router.post('/resumes/upload', protect, uploadResume);
 router.get('/resumes', protect, listResumes);
 router.post('/resumes/:id/ats-check', protect, atsCheck);
 router.post('/resumes/:id/tailor/:jobId', protect, tailorResume);
 router.get('/resumes/:id/versions', protect, resumeVersions);
+router.delete('/resumes/:id', protect, deleteResume);
 
 router.get('/jobs', listJobs);
 router.post('/jobs', protect, createJob);

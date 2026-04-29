@@ -9,7 +9,20 @@ import {
 import { Application, ApplicationStatus } from '@/types';
 import { StatusBadge } from './StatusBadge';
 
-const statuses: ApplicationStatus[] = ['saved', 'applied', 'screening', 'interview', 'offer', 'rejected', 'joined'];
+const statuses: ApplicationStatus[] = [
+  'saved',
+  'resume_tailored',
+  'applied',
+  'recruiter_viewed',
+  'shortlisted',
+  'assessment',
+  'interview_round_1',
+  'interview_round_2',
+  'hr_round',
+  'offered',
+  'rejected',
+  'joined'
+];
 
 export function ApplicationBoard({ applications }: { applications: Application[] }) {
   const [pending, startTransition] = useTransition();

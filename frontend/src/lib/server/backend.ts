@@ -89,6 +89,11 @@ export async function getTodayJobs() {
   return response.data;
 }
 
+export async function getJobs(query = '') {
+  const response = await backendFetch<ApiEnvelope<Job[]>>(`/api/jobs${query}`);
+  return response.data;
+}
+
 export async function getRecommendedJobs() {
   const response = await backendFetch<ApiEnvelope<RecommendedJob[]>>('/api/jobs/recommended');
   return response.data;

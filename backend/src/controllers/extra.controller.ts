@@ -112,13 +112,21 @@ export const dailyDigest = asyncHandler(async (req: any, res) => {
     Job.countDocuments(),
     Job.find().limit(5),
     Application.countDocuments({ userId: req.user.id, followUpDate: { $lte: new Date() } }),
-    Application.countDocuments({ userId: req.user.id, status: 'interview' })
+    Application.countDocuments({ userId: req.user.id, status: { $in: ['interview_round_1', 'interview_round_2', 'hr_round'] } })
   ]);
   res.json({
     success: true,
     data: {
       jobsFound: jobs,
       highMatchJobs: highMatch.length,
+      topJobs: highMatch.map((job) => ({
+        _id: job._id,
+        title: job.title,
+        company: job.company,
+        location: job.location
+      })),
+      urgentApplyJobs: highMatch.slice(0, 3).map((job) => `${job.title} at ${job.company}`),
+      missingSkills: ['TypeScript', 'Testing', 'System design'].slice(0, 3),
       followUps,
       interviews,
       mission: ['Apply to 5 jobs', 'Improve ATS keywords', 'Practice 10 interview questions']

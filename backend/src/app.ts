@@ -13,7 +13,15 @@ const app = express();
 app.use(helmet());
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 app.use(requestLogger);
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '3mb' }));
+app.use((req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  const origin = req.headers.origin;
+  if (origin && origin !== env.FRONTEND_URL && !origin.startsWith('chrome-extension://')) {
+    return res.status(403).json({ success: false, message: 'Blocked by CSRF origin policy.' });
+  }
+  return next();
+});
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

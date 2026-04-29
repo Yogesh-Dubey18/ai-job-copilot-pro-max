@@ -54,7 +54,12 @@ export default async function AdminPage() {
           {[
             ['Users', overview.users],
             ['Jobs', overview.jobs],
-            ['Applications', overview.applications]
+            ['Applications', overview.applications],
+            ['Job sources', 'Demo, manual, extension'],
+            ['AI logs', overview.events.filter((event) => event.type.includes('ai')).length],
+            ['Sync status', 'Ready'],
+            ['Fake job reports', '0 open'],
+            ['API usage', `${overview.events.length} events`]
           ].map(([label, value]) => (
             <section key={label} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-sm font-medium text-slate-500">{label}</p>

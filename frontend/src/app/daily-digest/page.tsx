@@ -26,12 +26,38 @@ export default async function DailyDigestPage() {
           ))}
         </section>
         <section className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-bold">Today’s mission</h2>
+          <h2 className="text-xl font-bold">Today&apos;s mission</h2>
           <ul className="mt-4 grid gap-3">
             {digest.mission.map((item) => (
               <li key={item} className="rounded-md bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">{item}</li>
             ))}
           </ul>
+        </section>
+        <section className="mt-6 grid gap-4 lg:grid-cols-3">
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold">Top high-fit jobs</h2>
+            <ul className="mt-4 grid gap-2 text-sm">
+              {(digest.topJobs || []).slice(0, 10).map((job) => (
+                <li key={job._id} className="rounded-md bg-slate-50 px-3 py-2 font-medium">{job.title} · {job.company}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold">Urgent apply jobs</h2>
+            <ul className="mt-4 grid gap-2 text-sm">
+              {(digest.urgentApplyJobs || []).map((job) => (
+                <li key={job} className="rounded-md bg-amber-50 px-3 py-2 font-medium text-amber-800">{job}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold">Missing skills</h2>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {(digest.missingSkills || []).map((skill) => (
+                <span key={skill} className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold">{skill}</span>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
     </AppShell>

@@ -33,7 +33,7 @@ export async function createDemoApplications() {
   const demos = [
     { title: 'Frontend Engineer', company: 'Acme AI Labs', status: 'saved', matchScore: 92 },
     { title: 'Full-Stack Developer', company: 'Orbit Cloud', status: 'applied', matchScore: 87 },
-    { title: 'React Engineer', company: 'Nova Systems', status: 'interview', matchScore: 94 }
+    { title: 'React Engineer', company: 'Nova Systems', status: 'interview_round_1', matchScore: 94 }
   ];
 
   for (const demo of demos) {

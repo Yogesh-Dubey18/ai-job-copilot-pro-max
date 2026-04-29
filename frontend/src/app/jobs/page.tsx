@@ -4,13 +4,18 @@ import { fetchDailyJobsAction, importJobAction } from '@/app/actions/product-act
 import { ActionForm } from '@/components/ActionForm';
 import { AppShell } from '@/components/AppShell';
 import { ServerActionButton } from '@/components/ServerActionButton';
-import { getRecommendedJobs, getSessionToken } from '@/lib/server/backend';
+import { getJobs, getRecommendedJobs, getSessionToken } from '@/lib/server/backend';
 
-export default async function JobsPage() {
+export default async function JobsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const token = await getSessionToken();
   if (!token) redirect('/login');
 
-  const jobs = await getRecommendedJobs();
+  const params = await searchParams;
+  const hasFilters = Object.values(params).some(Boolean);
+  const query = new URLSearchParams(Object.entries(params).filter((entry): entry is [string, string] => Boolean(entry[1]))).toString();
+  const jobs = hasFilters
+    ? (await getJobs(query ? `?${query}` : '')).map((job) => ({ job, score: { finalScore: 0, applyPriority: 'Apply Now' as const } }))
+    : await getRecommendedJobs();
 
   return (
     <AppShell>
@@ -25,6 +30,35 @@ export default async function JobsPage() {
 
         <section className="mt-8 grid gap-4 lg:grid-cols-[1fr_360px]">
           <div className="grid gap-4">
+            <form className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">
+              <input name="role" defaultValue={params.role || ''} placeholder="Role / keyword" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+              <input name="location" defaultValue={params.location || ''} placeholder="Location" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+              <select name="remote" defaultValue={params.remote || ''} className="rounded-md border border-slate-200 px-3 py-2 text-sm">
+                <option value="">Any workplace</option>
+                <option value="true">Remote / hybrid</option>
+                <option value="false">Onsite</option>
+              </select>
+              <select name="source" defaultValue={params.source || ''} className="rounded-md border border-slate-200 px-3 py-2 text-sm">
+                <option value="">Any source</option>
+                <option value="demo">Demo</option>
+                <option value="sample">Sample</option>
+                <option value="manual-url">Manual URL</option>
+                <option value="chrome-extension">Chrome Extension</option>
+              </select>
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input type="checkbox" name="fresher" value="true" defaultChecked={params.fresher === 'true'} />
+                Fresher only
+              </label>
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input type="checkbox" name="internship" value="true" defaultChecked={params.internship === 'true'} />
+                Internship
+              </label>
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input type="checkbox" name="postedToday" value="true" defaultChecked={params.postedToday === 'true'} />
+                Posted today
+              </label>
+              <button className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Apply filters</button>
+            </form>
             {jobs.map(({ job, score }) => (
               <Link key={job._id} href={`/jobs/${job._id}`} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:border-slate-400">
                 <div className="flex flex-wrap items-start justify-between gap-3">
