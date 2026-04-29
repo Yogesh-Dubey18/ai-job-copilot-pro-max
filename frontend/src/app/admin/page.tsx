@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { AppShell } from '@/components/AppShell';
 import { getAdminOverview, getSessionToken } from '@/lib/server/backend';
 import { AdminSyncButton } from '@/components/AdminSyncButton';
@@ -10,7 +11,34 @@ export default async function AdminPage() {
     redirect('/login');
   }
 
-  const overview = await getAdminOverview();
+  const overview = await getAdminOverview().catch((error) => {
+    const message = error instanceof Error ? error.message : 'Admin access failed.';
+    return { error: message };
+  });
+
+  if ('error' in overview) {
+    return (
+      <AppShell>
+        <div className="mx-auto grid min-h-screen max-w-3xl place-items-center px-4">
+          <section className="rounded-lg border border-amber-200 bg-white p-6 text-center shadow-sm">
+            <h1 className="text-3xl font-black tracking-tight">Admin Access Required</h1>
+            <p className="mt-3 text-slate-600">
+              This page is working, but your current session is not an admin session.
+            </p>
+            <p className="mt-2 rounded-md bg-amber-50 p-3 text-sm text-amber-800">{overview.error}</p>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Link href="/login" className="rounded-md bg-slate-950 px-4 py-2 font-semibold text-white">
+                Login as admin
+              </Link>
+              <Link href="/dashboard" className="rounded-md border border-slate-300 px-4 py-2 font-semibold text-slate-700">
+                Back to dashboard
+              </Link>
+            </div>
+          </section>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
