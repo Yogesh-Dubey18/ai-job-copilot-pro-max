@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { AppShell } from '@/components/AppShell';
 import { BentoGrid } from '@/components/BentoGrid';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -33,7 +34,12 @@ export default async function DashboardPage() {
           </div>
           <div className="space-y-3">
             {recent.length === 0 ? (
-              <p className="text-slate-500">No tracked applications yet.</p>
+              <div className="rounded-lg border border-dashed border-slate-300 p-5 text-center">
+                <p className="text-slate-500">No tracked applications yet. Your dashboard will fill after you add applications.</p>
+                <Link href="/applications" className="mt-3 inline-flex rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
+                  Add first application
+                </Link>
+              </div>
             ) : (
               recent.map((application) => (
                 <div key={application._id} className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 first:border-t-0 first:pt-0">
