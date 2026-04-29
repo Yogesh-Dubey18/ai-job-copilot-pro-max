@@ -34,6 +34,12 @@ export function PrivacyControls() {
       >
         Delete account data
       </button>
+      <a
+        href="/api/profile/export"
+        className="ml-3 inline-flex rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+      >
+        Export my data
+      </a>
       {message ? <p className="mt-3 text-sm font-medium text-rose-700">{message}</p> : null}
     </section>
   );

@@ -38,7 +38,7 @@ import {
   saveFromExtension,
   updateApplicationStatus
 } from '../controllers/jobs.controller';
-import { deleteAccount, getProfile, updateProfile } from '../controllers/profile.controller';
+import { deleteAccount, exportMyData, getProfile, updateProfile } from '../controllers/profile.controller';
 import { atsCheck, deleteResume, listResumes, resumeVersions, tailorResume, uploadResume } from '../controllers/resume.controller';
 import { protect, requireAdmin } from '../middleware/auth';
 
@@ -60,6 +60,7 @@ router.post('/ai/copilot', protect, createCopilot);
 
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
+router.get('/profile/export', protect, exportMyData);
 router.delete('/profile', protect, deleteAccount);
 
 router.post('/resumes/upload', protect, uploadResume);

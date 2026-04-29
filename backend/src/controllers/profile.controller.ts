@@ -2,6 +2,7 @@ import { z } from 'zod';
 import User from '../models/User';
 import Application from '../models/Application';
 import Resume from '../models/Resume';
+import Portfolio from '../models/Portfolio';
 import { asyncHandler } from '../utils/asyncHandler';
 
 const profileSchema = z.object({
@@ -47,4 +48,24 @@ export const deleteAccount = asyncHandler(async (req: any, res) => {
     User.findByIdAndDelete(req.user.id)
   ]);
   res.json({ success: true, data: { deleted: true } });
+});
+
+export const exportMyData = asyncHandler(async (req: any, res) => {
+  const [user, resumes, applications, portfolio] = await Promise.all([
+    User.findById(req.user.id).select('-passwordHash').lean(),
+    Resume.find({ userId: req.user.id }).lean(),
+    Application.find({ userId: req.user.id }).lean(),
+    Portfolio.findOne({ userId: req.user.id }).lean()
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      exportedAt: new Date().toISOString(),
+      user,
+      resumes,
+      applications,
+      portfolio
+    }
+  });
 });
