@@ -4,7 +4,11 @@
   "version": "1.0.0",
   "description": "Securely extract job data and send it to AI Job Copilot Pro MAX.",
   "permissions": ["activeTab", "scripting", "storage", "offscreen"],
-  "host_permissions": ["http://localhost:5000/*", "https://your-production-api.render.com/*", "<all_urls>"],
+  "host_permissions": [
+    "http://localhost:5000/*",
+    "https://backend-steel-three-33.vercel.app/*",
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background.js"
   },

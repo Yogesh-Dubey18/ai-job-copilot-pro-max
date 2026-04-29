@@ -83,10 +83,10 @@ npm run seed:admin --workspace backend
 The extension sends scraped jobs to:
 
 ```text
-http://localhost:5000/api/jobs/save-from-extension
+https://backend-steel-three-33.vercel.app/api/jobs/save-from-extension
 ```
 
-For production, set `backendUrl` in `chrome.storage.sync` or update the default in `extension/background.js`.
+For local development, set `backendUrl` in `chrome.storage.sync` to `http://localhost:5000` or update the default in `extension/background.js`.
 
 ## Backend Deployment on Render
 

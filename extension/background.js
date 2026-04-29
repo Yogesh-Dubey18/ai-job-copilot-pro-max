@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = 'http://localhost:5000';
+const DEFAULT_API_URL = 'https://backend-steel-three-33.vercel.app';
 
 async function getBackendUrl() {
   const stored = await chrome.storage.sync.get(['backendUrl']);
