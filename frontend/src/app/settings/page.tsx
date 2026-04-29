@@ -19,7 +19,9 @@ export default async function SettingsPage() {
           {[
             ['Session security', 'Authenticated routes use an httpOnly cookie session through the Next.js BFF.'],
             ['AI generation', 'Gemini calls stay server-side in the Express backend and return a safe fallback on failure.'],
-            ['Chrome extension', 'The extension posts saved jobs to the deployed backend ingestion endpoint.']
+            ['Chrome extension', 'The extension includes an options screen so the backend URL can be changed without editing code.'],
+            ['Observability', 'Backend responses include request IDs and structured request logs for production debugging.'],
+            ['Testing and CI', 'GitHub Actions, typecheck, lint, unit tests, and builds are configured as repository quality gates.']
           ].map(([title, body]) => (
             <section key={title} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="font-bold">{title}</h2>

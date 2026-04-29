@@ -111,15 +111,40 @@ export const updateApplicationStatus = asyncHandler(async (req: any, res) => {
 });
 
 export const applicationStats = asyncHandler(async (req: any, res) => {
-  const [saved, applied, interviews, offers] = await Promise.all([
+  const [saved, applied, screening, interviews, offers, rejected, joined, total] = await Promise.all([
     Application.countDocuments({ userId: req.user.id, status: 'saved' }),
     Application.countDocuments({ userId: req.user.id, status: 'applied' }),
+    Application.countDocuments({ userId: req.user.id, status: 'screening' }),
     Application.countDocuments({ userId: req.user.id, status: 'interview' }),
-    Application.countDocuments({ userId: req.user.id, status: 'offer' })
+    Application.countDocuments({ userId: req.user.id, status: 'offer' }),
+    Application.countDocuments({ userId: req.user.id, status: 'rejected' }),
+    Application.countDocuments({ userId: req.user.id, status: 'joined' }),
+    Application.countDocuments({ userId: req.user.id })
   ]);
 
   res.json({
     success: true,
-    data: { saved, applied, interviews, offers }
+    data: { saved, applied, screening, interviews, offers, rejected, joined, total }
+  });
+});
+
+export const applicationAnalytics = asyncHandler(async (req: any, res) => {
+  const applications = await Application.find({ userId: req.user.id }).sort({ createdAt: -1 }).lean();
+  const total = applications.length;
+  const interviews = applications.filter((item) => item.status === 'interview').length;
+  const offers = applications.filter((item) => item.status === 'offer').length;
+  const avgMatchScore = total
+    ? Math.round(applications.reduce((sum, item) => sum + (item.matchScore || 0), 0) / total)
+    : 0;
+
+  res.json({
+    success: true,
+    data: {
+      total,
+      interviewRate: total ? Math.round((interviews / total) * 100) : 0,
+      offerRate: total ? Math.round((offers / total) * 100) : 0,
+      avgMatchScore,
+      recentCompanies: applications.slice(0, 8).map((item) => item.company)
+    }
   });
 });

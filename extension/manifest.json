@@ -21,5 +21,6 @@
   ],
   "action": {
     "default_title": "Save Job to Copilot"
-  }
+  },
+  "options_page": "options.html"
 }

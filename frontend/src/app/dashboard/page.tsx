@@ -27,6 +27,21 @@ export default async function DashboardPage() {
 
         <BentoGrid stats={stats} />
 
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <a href="/analytics" className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:bg-slate-50">
+            <h2 className="font-bold">Analytics</h2>
+            <p className="mt-1 text-sm text-slate-600">See conversion rates and match quality.</p>
+          </a>
+          <a href="/tools" className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:bg-slate-50">
+            <h2 className="font-bold">AI Tools</h2>
+            <p className="mt-1 text-sm text-slate-600">Generate interview, salary, portfolio, and Gmail assets.</p>
+          </a>
+          <a href="/settings" className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:bg-slate-50">
+            <h2 className="font-bold">Settings</h2>
+            <p className="mt-1 text-sm text-slate-600">Review security and integration posture.</p>
+          </a>
+        </div>
+
         <section className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold">Recent Activity</h2>
