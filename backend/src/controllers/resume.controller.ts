@@ -89,6 +89,20 @@ export const listResumes = asyncHandler(async (req: any, res) => {
   res.json({ success: true, data: resumes });
 });
 
+export const getResume = asyncHandler(async (req: any, res) => {
+  const resume = await Resume.findOne({ _id: req.params.id, userId: req.user.id });
+  if (!resume) throw new AppError('Resume not found.', 404);
+  res.json({ success: true, data: resume });
+});
+
+export const parseResume = asyncHandler(async (req: any, res) => {
+  const resume = await Resume.findOne({ _id: req.params.id, userId: req.user.id });
+  if (!resume) throw new AppError('Resume not found.', 404);
+  resume.sections = splitSections(resume.parsedText);
+  await resume.save();
+  res.json({ success: true, data: { sections: resume.sections, detectedSkills: resume.sections.skills } });
+});
+
 export const atsCheck = asyncHandler(async (req: any, res) => {
   const resume = await Resume.findOne({ _id: req.params.id, userId: req.user.id });
   if (!resume) throw new AppError('Resume not found.', 404);
@@ -140,4 +154,18 @@ export const deleteResume = asyncHandler(async (req: any, res) => {
   const resume = await Resume.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
   if (!resume) throw new AppError('Resume not found.', 404);
   res.json({ success: true, data: { deleted: true } });
+});
+
+export const exportResume = asyncHandler(async (req: any, res) => {
+  const resume = await Resume.findOne({ _id: req.params.id, userId: req.user.id });
+  if (!resume) throw new AppError('Resume not found.', 404);
+  res.json({
+    success: true,
+    data: {
+      format: req.params.format,
+      fileName: `${resume.title}.${req.params.format}`,
+      content: resume.parsedText,
+      message: 'Export-ready content generated. Connect a PDF/DOCX renderer for binary downloads.'
+    }
+  });
 });

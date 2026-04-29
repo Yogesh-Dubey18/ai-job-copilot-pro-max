@@ -181,6 +181,12 @@ export const generateCompanyResponse = asyncHandler(async (req: any, res) => {
   res.json({ success: true, data: response });
 });
 
+export const listCompanyResponses = asyncHandler(async (req: any, res) => {
+  const application = await Application.findOne({ _id: req.params.id, userId: req.user.id });
+  if (!application) throw new AppError('Application not found.', 404);
+  res.json({ success: true, data: application.responses || [] });
+});
+
 export const saveFromExtension = asyncHandler(async (req, res) => {
   const normalized = normalizeScrapedJob(req.body);
   const job = await Job.findOneAndUpdate(
@@ -198,6 +204,12 @@ export const listApplications = asyncHandler(async (req: any, res) => {
     .sort({ updatedAt: -1 });
 
   res.json({ success: true, data: applications });
+});
+
+export const getApplication = asyncHandler(async (req: any, res) => {
+  const application = await Application.findOne({ _id: req.params.id, userId: req.user.id }).populate('jobId');
+  if (!application) throw new AppError('Application not found.', 404);
+  res.json({ success: true, data: application });
 });
 
 export const createApplication = asyncHandler(async (req: any, res) => {
@@ -244,6 +256,39 @@ export const updateApplicationStatus = asyncHandler(async (req: any, res) => {
     application.followUpDate = application.followUpDate || new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
   }
 
+  await application.save();
+  res.json({ success: true, data: application });
+});
+
+export const addApplicationTimeline = asyncHandler(async (req: any, res) => {
+  const schema = z.object({ type: z.string().default('note'), note: z.string().min(1), nextAction: z.string().optional() });
+  const data = schema.parse(req.body);
+  const application = await Application.findOne({ _id: req.params.id, userId: req.user.id });
+  if (!application) throw new AppError('Application not found.', 404);
+  application.timeline.push({
+    status: application.status,
+    note: data.note,
+    source: data.type,
+    nextAction: data.nextAction || getNextAction(application.status),
+    date: new Date()
+  });
+  await application.save();
+  res.json({ success: true, data: application });
+});
+
+export const setFollowUp = asyncHandler(async (req: any, res) => {
+  const schema = z.object({ followUpDate: z.string(), note: z.string().optional() });
+  const data = schema.parse(req.body);
+  const application = await Application.findOne({ _id: req.params.id, userId: req.user.id });
+  if (!application) throw new AppError('Application not found.', 404);
+  application.followUpDate = new Date(data.followUpDate);
+  application.timeline.push({
+    status: application.status,
+    note: data.note || 'Follow-up reminder scheduled.',
+    source: 'follow_up',
+    nextAction: 'Send a concise follow-up on the scheduled date.',
+    date: new Date()
+  });
   await application.save();
   res.json({ success: true, data: application });
 });

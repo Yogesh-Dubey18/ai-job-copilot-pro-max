@@ -32,6 +32,11 @@ const authHeaders = async () => {
 
 export const getSessionToken = async () => (await cookies()).get('session')?.value;
 
+export async function getCurrentUser() {
+  const response = await backendFetch<{ success: boolean; user: UserProfile }>('/api/auth/me');
+  return response.user;
+}
+
 export async function backendFetch<T>(path: string, init: RequestInit = {}) {
   const headers = await authHeaders();
   const response = await fetch(`${BACKEND_URL}${path}`, {

@@ -32,6 +32,14 @@ const apiLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'AI Job Copilot API running',
+    health: '/api/health'
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({
     success: true,

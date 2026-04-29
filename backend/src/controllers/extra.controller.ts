@@ -78,6 +78,41 @@ export const analyzeJob = asyncHandler(async (req: any, res) => {
   res.json({ success: true, data });
 });
 
+export const scoreJobEndpoint = asyncHandler(async (req: any, res) => {
+  const user = await User.findById(req.user.id);
+  const job = await Job.findById(req.params.id);
+  if (!job) throw new AppError('Job not found.', 404);
+  const score = scoreJob(`${user?.profile?.skills?.join(' ') || ''}`, user?.profile?.resumeBaseText || '', job.description);
+  res.json({
+    success: true,
+    data: {
+      ...score,
+      applyDecision:
+        score.scamRiskScore >= 70 ? 'skip' : score.finalScore >= 85 ? 'apply_now' : score.finalScore >= 70 ? 'tailor_first' : score.finalScore >= 50 ? 'improve_first' : 'skip',
+      nextActions: [score.aiRecommendation, 'Use Manual Apply Mode after submitting on the original portal.']
+    }
+  });
+});
+
+export const scamCheck = asyncHandler(async (req, res) => {
+  const text = `${req.body.title || ''} ${req.body.company || ''} ${req.body.description || ''} ${req.body.url || ''}`;
+  const reasons = [
+    /gmail|yahoo|hotmail/i.test(text) ? 'Personal email domain detected.' : '',
+    /fee|deposit|payment|registration charge/i.test(text) ? 'Upfront payment language detected.' : '',
+    /earn.*(lakh|crore)|guaranteed/i.test(text) ? 'Unrealistic compensation language detected.' : '',
+    /example\.com/i.test(text) ? 'Invalid documentation URL detected.' : ''
+  ].filter(Boolean);
+  const risk = reasons.length >= 2 ? 'high' : reasons.length === 1 ? 'medium' : 'low';
+  res.json({
+    success: true,
+    data: {
+      scamRisk: risk,
+      reasons,
+      safetyRecommendation: risk === 'high' ? 'Do not apply until verified through official company channels.' : 'Verify company details before sharing sensitive information.'
+    }
+  });
+});
+
 export const saveJob = asyncHandler(async (req: any, res) => {
   const job = await Job.findById(req.params.id);
   if (!job) throw new AppError('Job not found.', 404);
@@ -134,6 +169,64 @@ export const dailyDigest = asyncHandler(async (req: any, res) => {
   });
 });
 
+export const generateDailyDigest = asyncHandler(async (req: any, res) => {
+  const jobs = await Job.countDocuments();
+  res.json({
+    success: true,
+    data: {
+      jobsFound: jobs,
+      highMatchJobs: Math.min(jobs, 10),
+      urgentApplyJobs: [],
+      followUps: 0,
+      interviews: 0,
+      missingSkills: ['Testing', 'TypeScript'],
+      mission: ['Review top jobs', 'Send one follow-up', 'Improve one resume bullet'],
+      generated: true
+    }
+  });
+});
+
+export const notifications = asyncHandler(async (_req: any, res) => {
+  res.json({
+    success: true,
+    data: [
+      { _id: 'demo-follow-up', title: 'Follow-up due', body: 'Review manually applied jobs and send one follow-up.', read: false },
+      { _id: 'demo-digest', title: 'Daily digest ready', body: 'Check top matching jobs for today.', read: false }
+    ]
+  });
+});
+
+export const markNotificationRead = asyncHandler(async (req, res) => {
+  res.json({ success: true, data: { _id: req.params.id, read: true } });
+});
+
+export const syncIntegrations = asyncHandler(async (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      imported: 3,
+      duplicates: 0,
+      failed: 0,
+      sources: ['demo', 'manual-url', 'chrome-extension'],
+      fallback: true
+    }
+  });
+});
+
+export const integrationsStatus = asyncHandler(async (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      adzuna: 'needs_credentials',
+      remotive: 'fallback_ready',
+      greenhouse: 'fallback_ready',
+      lever: 'fallback_ready',
+      ashby: 'fallback_ready',
+      lastSync: new Date().toISOString()
+    }
+  });
+});
+
 export const interviewPrep = asyncHandler(async (req, res) => {
   res.json({
     success: true,
@@ -168,6 +261,20 @@ export const generatePortfolio = asyncHandler(async (req: any, res) => {
 
 export const getPortfolio = asyncHandler(async (req: any, res) => {
   const portfolio = await Portfolio.findOne({ userId: req.user.id });
+  res.json({ success: true, data: portfolio });
+});
+
+export const updatePortfolio = asyncHandler(async (req: any, res) => {
+  const portfolio = await Portfolio.findOneAndUpdate(
+    { userId: req.user.id },
+    { ...req.body, userId: req.user.id },
+    { upsert: true, new: true }
+  );
+  res.json({ success: true, data: portfolio });
+});
+
+export const publishPortfolio = asyncHandler(async (req: any, res) => {
+  const portfolio = await Portfolio.findOneAndUpdate({ userId: req.user.id }, { published: true }, { new: true });
   res.json({ success: true, data: portfolio });
 });
 

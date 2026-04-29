@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Bot, BriefcaseBusiness, ChevronDown, FileText, LayoutDashboard, LogOut } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const mainLinks = [
@@ -27,6 +28,14 @@ const moreLinks = [
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState<'user' | 'admin'>('user');
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((response) => response.json())
+      .then((payload) => setRole(payload.user?.role === 'admin' ? 'admin' : 'user'))
+      .catch(() => setRole('user'));
+  }, []);
 
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
@@ -62,7 +71,7 @@ export function Navbar() {
               More <ChevronDown className="h-4 w-4" />
             </button>
             <div className="invisible absolute right-0 top-full w-48 rounded-lg border border-slate-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
-              {moreLinks.map((link) => (
+              {moreLinks.filter((link) => link.href !== '/admin' || role === 'admin').map((link) => (
                 <Link key={link.href} href={link.href} className="block rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
                   {link.label}
                 </Link>

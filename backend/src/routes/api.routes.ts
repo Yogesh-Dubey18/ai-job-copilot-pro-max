@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createApplyPack, createCopilot, createWorkflow } from '../controllers/ai.controller';
+import { companyReply, createApplyPack, createCopilot, createWorkflow } from '../controllers/ai.controller';
 import { adminOverview, syncJobs } from '../controllers/admin.controller';
 import {
   analyzeJob,
@@ -7,11 +7,20 @@ import {
   fetchDailyJobs,
   generatePortfolio,
   getPortfolio,
+  generateDailyDigest,
+  integrationsStatus,
   importUrl,
   interviewPrep,
+  markNotificationRead,
+  notifications,
   publicPortfolio,
+  publishPortfolio,
   recommendedJobs,
   saveJob,
+  scamCheck,
+  scoreJobEndpoint,
+  syncIntegrations,
+  updatePortfolio,
   todayJobs
 } from '../controllers/extra.controller';
 import {
@@ -28,18 +37,22 @@ import {
 import {
   applicationStats,
   applicationAnalytics,
+  addApplicationTimeline,
   createApplication,
   createJob,
+  getApplication,
   getJob,
   listApplications,
   listJobs,
   generateCompanyResponse,
+  listCompanyResponses,
   manualApply,
+  setFollowUp,
   saveFromExtension,
   updateApplicationStatus
 } from '../controllers/jobs.controller';
 import { deleteAccount, exportMyData, getProfile, updateProfile } from '../controllers/profile.controller';
-import { atsCheck, deleteResume, listResumes, resumeVersions, tailorResume, uploadResume } from '../controllers/resume.controller';
+import { atsCheck, deleteResume, exportResume, getResume, listResumes, parseResume, resumeVersions, tailorResume, uploadResume } from '../controllers/resume.controller';
 import { protect, requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -57,6 +70,7 @@ router.post('/auth/mfa', protect, configureMfa);
 router.post('/ai/apply-pack', createApplyPack);
 router.post('/ai/workflow', protect, createWorkflow);
 router.post('/ai/copilot', protect, createCopilot);
+router.post('/ai/company-reply', protect, companyReply);
 
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
@@ -65,9 +79,12 @@ router.delete('/profile', protect, deleteAccount);
 
 router.post('/resumes/upload', protect, uploadResume);
 router.get('/resumes', protect, listResumes);
+router.get('/resumes/:id', protect, getResume);
+router.post('/resumes/:id/parse', protect, parseResume);
 router.post('/resumes/:id/ats-check', protect, atsCheck);
 router.post('/resumes/:id/tailor/:jobId', protect, tailorResume);
 router.get('/resumes/:id/versions', protect, resumeVersions);
+router.post('/resumes/:id/export/:format', protect, exportResume);
 router.delete('/resumes/:id', protect, deleteResume);
 
 router.get('/jobs', listJobs);
@@ -80,12 +97,18 @@ router.post('/jobs/save-from-extension', saveFromExtension);
 router.get('/jobs/:id', getJob);
 router.post('/jobs/:id/save', protect, saveJob);
 router.post('/jobs/:id/analyze', protect, analyzeJob);
+router.post('/jobs/:id/score', protect, scoreJobEndpoint);
 
 router.get('/applications', protect, listApplications);
 router.post('/applications', protect, createApplication);
 router.post('/applications/manual-apply', protect, manualApply);
+router.get('/applications/:id', protect, getApplication);
 router.patch('/applications/:id/status', protect, updateApplicationStatus);
+router.post('/applications/:id/timeline', protect, addApplicationTimeline);
+router.post('/applications/:id/follow-up', protect, setFollowUp);
 router.post('/applications/:id/response', protect, generateCompanyResponse);
+router.get('/applications/:id/replies', protect, listCompanyResponses);
+router.post('/applications/:id/replies', protect, generateCompanyResponse);
 router.get('/applications/stats', protect, applicationStats);
 router.get('/applications/analytics', protect, applicationAnalytics);
 
@@ -93,9 +116,17 @@ router.get('/admin/overview', protect, requireAdmin, adminOverview);
 router.post('/admin/jobs/sync', protect, requireAdmin, syncJobs);
 
 router.get('/daily-digest', protect, dailyDigest);
+router.post('/daily-digest/generate', protect, generateDailyDigest);
+router.get('/notifications', protect, notifications);
+router.patch('/notifications/:id/read', protect, markNotificationRead);
+router.post('/integrations/jobs/sync', protect, requireAdmin, syncIntegrations);
+router.get('/integrations/jobs/status', protect, requireAdmin, integrationsStatus);
+router.post('/ai/scam-check', protect, scamCheck);
 router.post('/interviews/prep/:applicationId', protect, interviewPrep);
 router.post('/portfolio/generate', protect, generatePortfolio);
 router.get('/portfolio', protect, getPortfolio);
+router.put('/portfolio', protect, updatePortfolio);
+router.post('/portfolio/publish', protect, publishPortfolio);
 router.get('/portfolio/public/:username', publicPortfolio);
 
 export default router;
