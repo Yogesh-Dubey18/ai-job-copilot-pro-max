@@ -24,7 +24,7 @@ export const syncJobs = asyncHandler(async (req: any, res) => {
       company: 'Signal Works',
       location: 'Remote',
       description: 'Build TypeScript, React, Node.js and AI workflow products.',
-      url: 'https://example.com/jobs/ai-product-engineer',
+      url: '',
       source: 'admin-sync'
     },
     {
@@ -32,7 +32,7 @@ export const syncJobs = asyncHandler(async (req: any, res) => {
       company: 'CloudPilot',
       location: 'Bengaluru',
       description: 'Own Next.js dashboards, Express APIs, MongoDB models, and analytics.',
-      url: 'https://example.com/jobs/full-stack-saas-developer',
+      url: '',
       source: 'admin-sync'
     }
   ];

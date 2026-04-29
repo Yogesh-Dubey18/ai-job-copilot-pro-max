@@ -8,7 +8,7 @@ export interface ScrapedJobPayload {
 }
 
 export const normalizeScrapedJob = (payload: ScrapedJobPayload) => {
-  const url = payload.url || '';
+  const url = sanitizeOperationalUrl(payload.url || '');
 
   return {
     source: payload.source || 'chrome-extension',
@@ -21,6 +21,14 @@ export const normalizeScrapedJob = (payload: ScrapedJobPayload) => {
     description: payload.description?.trim() || 'No description captured from page.',
     skills: inferSkills(payload.description || '')
   };
+};
+
+const sanitizeOperationalUrl = (url: string) => {
+  if (!url || /(^https?:\/\/)?(www\.)?example\.com/i.test(url)) {
+    return '';
+  }
+
+  return url;
 };
 
 const inferSkills = (description: string) => {

@@ -14,7 +14,7 @@ const sampleJobs = [
     company: 'ABC Tech',
     location: 'Remote',
     description: 'React JavaScript REST API Tailwind Testing role for frontend fresher.',
-    url: 'https://example.com/react-frontend',
+    url: '',
     source: 'sample'
   },
   {
@@ -22,7 +22,7 @@ const sampleJobs = [
     company: 'Startup Labs',
     location: 'Bengaluru Hybrid',
     description: 'MongoDB Express React Node.js API Git internship with portfolio projects.',
-    url: 'https://example.com/mern-intern',
+    url: '',
     source: 'sample'
   },
   {
@@ -30,7 +30,7 @@ const sampleJobs = [
     company: 'Cloud UI',
     location: 'Remote',
     description: 'Next.js TypeScript React server rendering and testing role.',
-    url: 'https://example.com/nextjs-dev',
+    url: '',
     source: 'sample'
   }
 ];

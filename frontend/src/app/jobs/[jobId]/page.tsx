@@ -9,6 +9,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
 
   const { jobId } = await params;
   const job = await getJob(jobId);
+  const hasOperationalUrl = Boolean(job.url && !/^https?:\/\/(www\.)?example\.com/i.test(job.url));
 
   return (
     <AppShell>
@@ -22,7 +23,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
         <section className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold">Job description</h2>
           <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{job.description}</p>
-          {job.url ? (
+          {hasOperationalUrl ? (
             <a href={job.url} target="_blank" rel="noreferrer" className="mt-6 inline-flex text-sm font-semibold text-slate-950 underline">
               Open original job
             </a>

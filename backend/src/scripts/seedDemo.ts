@@ -34,7 +34,7 @@ async function seedDemo() {
         company: 'Cloud UI Labs',
         location: 'Remote',
         description: 'Next.js React TypeScript Tailwind API testing role for a product team.',
-        url: 'https://example.com/nextjs-frontend',
+        url: '',
         source: 'demo'
       }),
       normalizeScrapedJob({
@@ -42,7 +42,7 @@ async function seedDemo() {
         company: 'Startup Works',
         location: 'Bengaluru Hybrid',
         description: 'MongoDB Express React Node.js REST API role with dashboard and authentication work.',
-        url: 'https://example.com/mern-stack',
+        url: '',
         source: 'demo'
       })
     ],
@@ -76,6 +76,8 @@ async function seedDemo() {
       { upsert: true, new: true }
     );
   }
+
+  await Job.updateMany({ url: /^https?:\/\/(www\.)?example\.com/i }, { $set: { url: '', sourceJobId: undefined } });
 
   console.log('Demo data seeded.');
   await mongoose.disconnect();
