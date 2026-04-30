@@ -23,9 +23,10 @@ export function ResumeUploadClient() {
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formElement = event.currentTarget;
     setMessage('');
     setPending(true);
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
     const file = form.get('file');
     const parsedText = String(form.get('parsedText') || '');
 
@@ -52,7 +53,7 @@ export function ResumeUploadClient() {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.message || 'Resume upload failed.');
       setMessage(`Resume saved. ATS score: ${payload.data?.atsScore ?? 0}.`);
-      event.currentTarget.reset();
+      formElement.reset();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Upload failed.');
     } finally {
