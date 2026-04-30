@@ -5,6 +5,7 @@ import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { generateToken } from '../utils/generateToken';
 import { createRecoveryCodes, createSecureToken, hashToken } from '../services/security.service';
+import { sendEmail } from '../services/email.service';
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -102,11 +103,16 @@ export const requestEmailVerification = asyncHandler(async (req, res) => {
   user.emailVerificationTokenHash = hashToken(token);
   user.emailVerificationExpires = new Date(Date.now() + 60 * 60 * 1000);
   await user.save();
+  await sendEmail({
+    to: user.email,
+    subject: 'Verify your AI Job Copilot account',
+    text: `Use this verification token: ${token}`
+  });
 
   res.json({
     success: true,
     message: 'Verification token generated. Configure email delivery to send this token.',
-    demoToken: token
+    setupToken: token
   });
 });
 
@@ -144,6 +150,11 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
   user.passwordResetTokenHash = hashToken(token);
   user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000);
   await user.save();
+  await sendEmail({
+    to: user.email,
+    subject: 'Reset your AI Job Copilot password',
+    text: `Use this reset token within 30 minutes: ${token}`
+  });
 
   res.json({
     success: true,

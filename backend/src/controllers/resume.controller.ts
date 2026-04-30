@@ -2,6 +2,7 @@ import { z } from 'zod';
 import Job from '../models/Job';
 import Resume from '../models/Resume';
 import User from '../models/User';
+import { buildResumeExport, parseResumeFile } from '../services/resumeFile.service';
 import { scoreJob } from '../services/scoring.service';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -13,42 +14,6 @@ const uploadSchema = z.object({
   fileBase64: z.string().optional(),
   parsedText: z.string().optional()
 });
-
-const allowedMimeTypes = new Set([
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/msword',
-  'text/plain'
-]);
-
-const parseFallbackText = (mimeType: string, fileBase64 = '', parsedText = '') => {
-  if (parsedText.trim()) return parsedText.trim();
-
-  if (!fileBase64) {
-    throw new AppError('Resume text or file content is required.', 400);
-  }
-
-  const sizeBytes = Math.ceil((fileBase64.length * 3) / 4);
-  if (sizeBytes > 2 * 1024 * 1024) {
-    throw new AppError('Resume upload must be 2MB or smaller.', 413);
-  }
-
-  if (!allowedMimeTypes.has(mimeType)) {
-    throw new AppError('Only PDF, DOC, DOCX, or TXT resumes are supported.', 400);
-  }
-
-  const buffer = Buffer.from(fileBase64, 'base64');
-  if (mimeType === 'text/plain') {
-    return buffer.toString('utf8').replace(/\s+/g, ' ').trim();
-  }
-
-  return [
-    'Resume file uploaded successfully.',
-    'Text extraction fallback is active for this environment.',
-    'Paste resume text in the upload form for more accurate ATS scoring.',
-    buffer.toString('utf8').replace(/[^\x20-\x7E\n]/g, ' ').slice(0, 4000)
-  ].join('\n');
-};
 
 const splitSections = (text: string) => {
   const skills = (text.match(/\b(React|Next\.js|TypeScript|JavaScript|Node\.js|Express|MongoDB|SQL|Python|Docker|AWS|Tailwind|Testing)\b/gi) || [])
@@ -67,7 +32,7 @@ const splitSections = (text: string) => {
 export const uploadResume = asyncHandler(async (req: any, res) => {
   const data = uploadSchema.parse(req.body);
   const mimeType = data.mimeType || 'text/plain';
-  const parsedText = parseFallbackText(mimeType, data.fileBase64, data.parsedText);
+  const parsedText = await parseResumeFile(mimeType, data.fileBase64, data.parsedText);
   if (parsedText.length < 20) throw new AppError('Resume content is too short to analyze.', 400);
   const atsScore = Math.min(100, Math.max(35, Math.round(parsedText.length / 35)));
   const resume = await Resume.create({
@@ -175,13 +140,16 @@ export const deleteResume = asyncHandler(async (req: any, res) => {
 export const exportResume = asyncHandler(async (req: any, res) => {
   const resume = await Resume.findOne({ _id: req.params.id, userId: req.user.id });
   if (!resume) throw new AppError('Resume not found.', 404);
+  const exported = await buildResumeExport(req.params.format === 'docx' ? 'docx' : 'pdf', resume.title.replace(/[^a-z0-9-]+/gi, '-'), resume.parsedText);
   res.json({
     success: true,
     data: {
       format: req.params.format,
-      fileName: `${resume.title}.${req.params.format}`,
+      fileName: exported.fileName,
+      mimeType: exported.mimeType,
+      base64: exported.base64,
       content: resume.parsedText,
-      message: 'Export-ready content generated. Connect a PDF/DOCX renderer for binary downloads.'
+      message: 'Resume export generated.'
     }
   });
 });

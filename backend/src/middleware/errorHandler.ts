@@ -1,6 +1,7 @@
 import { ErrorRequestHandler } from 'express';
 import { env } from '../config/env';
 import { recordEvent } from '../services/event.service';
+import { captureError } from '../services/observability.service';
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   const statusCode = error.statusCode || 500;
@@ -14,6 +15,7 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     requestId,
     metadata: { statusCode }
   });
+  captureError(error, requestId);
 
   res.status(statusCode).json({
     success: false,

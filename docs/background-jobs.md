@@ -30,4 +30,12 @@ When `REDIS_URL` is missing, the API reports `in_memory_fallback`. User-facing f
 
 ## Render/Vercel Notes
 
-For long-running queue workers, deploy the backend API as a web service and add a separate worker process with the same environment variables plus `REDIS_URL`. Vercel serverless deployments can expose queue status and synchronous fallback flows, but durable recurring jobs should run in a persistent worker environment.
+For long-running queue workers, deploy the backend API as a web service and add a separate worker process with the same environment variables plus `REDIS_URL`.
+
+Worker command:
+
+```bash
+npm run worker --workspace backend
+```
+
+Vercel serverless deployments can expose queue status and synchronous fallback flows, but durable recurring jobs should run in a persistent worker environment such as Render Worker, Railway Worker, Fly.io, or a VPS process manager.

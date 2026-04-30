@@ -3,8 +3,8 @@ import EventLog from '../models/EventLog';
 import Job from '../models/Job';
 import Application from '../models/Application';
 import User from '../models/User';
-import { normalizeScrapedJob } from '../services/scraper.service';
 import { recordEvent } from '../services/event.service';
+import { getSourceStatus, syncAllJobSources } from '../services/jobSource.service';
 
 export const adminOverview = asyncHandler(async (_req, res) => {
   const [users, jobs, applications, events] = await Promise.all([
@@ -18,42 +18,18 @@ export const adminOverview = asyncHandler(async (_req, res) => {
 });
 
 export const syncJobs = asyncHandler(async (req: any, res) => {
-  const samples = [
-    {
-      title: 'AI Product Engineer',
-      company: 'Signal Works',
-      location: 'Remote',
-      description: 'Build TypeScript, React, Node.js and AI workflow products.',
-      url: '',
-      source: 'admin-sync'
-    },
-    {
-      title: 'Full Stack SaaS Developer',
-      company: 'CloudPilot',
-      location: 'Bengaluru',
-      description: 'Own Next.js dashboards, Express APIs, MongoDB models, and analytics.',
-      url: '',
-      source: 'admin-sync'
-    }
-  ];
-
-  const jobs = [];
-  for (const sample of samples) {
-    const normalized = normalizeScrapedJob(sample);
-    const job = await Job.findOneAndUpdate(
-      { source: normalized.source, sourceJobId: normalized.sourceJobId || normalized.url },
-      normalized,
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
-    jobs.push(job);
-  }
+  const results = await syncAllJobSources();
 
   await recordEvent({
     type: 'admin.job_sync',
-    message: 'Admin sync imported sample jobs.',
+    message: 'Admin sync completed job source imports.',
     userId: req.user?.id,
-    metadata: { count: jobs.length }
+    metadata: { results }
   });
 
-  res.json({ success: true, data: jobs });
+  res.json({ success: true, data: results });
+});
+
+export const jobSourceStatus = asyncHandler(async (_req, res) => {
+  res.json({ success: true, data: await getSourceStatus() });
 });

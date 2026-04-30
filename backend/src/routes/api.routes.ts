@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { companyReply, createApplyPack, createCopilot, createWorkflow } from '../controllers/ai.controller';
-import { adminOverview, syncJobs } from '../controllers/admin.controller';
+import { adminOverview, jobSourceStatus, syncJobs } from '../controllers/admin.controller';
 import { queueStatus } from '../controllers/background.controller';
-import { billingPlans, billingStatus, incrementUsage } from '../controllers/billing.controller';
+import { billingPlans, billingStatus, billingWebhook, createCheckoutSession, incrementUsage } from '../controllers/billing.controller';
 import { gmailConnect, gmailDisconnect, gmailStatus, gmailSync } from '../controllers/gmail.controller';
 import {
   analyzeJob,
@@ -75,6 +75,8 @@ router.get('/billing/status', protect, billingStatus);
 router.get('/billing/subscription', protect, billingStatus);
 router.post('/billing/usage', protect, incrementUsage);
 router.get('/billing/usage', protect, billingStatus);
+router.post('/billing/checkout', protect, createCheckoutSession);
+router.post('/billing/webhook', billingWebhook);
 
 router.get('/gmail/status', protect, gmailStatus);
 router.post('/gmail/connect', protect, gmailConnect);
@@ -130,6 +132,7 @@ router.post('/applications/:id/replies', protect, generateCompanyResponse);
 
 router.get('/admin/overview', protect, requireAdmin, adminOverview);
 router.post('/admin/jobs/sync', protect, requireAdmin, syncJobs);
+router.get('/admin/job-sources/status', protect, requireAdmin, jobSourceStatus);
 
 router.get('/daily-digest', protect, dailyDigest);
 router.post('/daily-digest/generate', protect, generateDailyDigest);

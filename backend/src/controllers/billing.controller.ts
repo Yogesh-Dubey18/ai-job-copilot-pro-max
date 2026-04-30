@@ -1,34 +1,34 @@
 import Subscription from '../models/Subscription';
 import UsageCounter from '../models/UsageCounter';
+import { createCheckout, enforceUsage, getEntitlement, planLimits } from '../services/billing.service';
 import { asyncHandler } from '../utils/asyncHandler';
 
 export const billingPlans = asyncHandler(async (_req, res) => {
   res.json({
     success: true,
     data: [
-      { id: 'free', name: 'Free', aiCredits: 25, resumeVersions: 3, gmailSync: false },
-      { id: 'pro', name: 'Pro', aiCredits: 250, resumeVersions: 25, gmailSync: true },
-      { id: 'premium', name: 'Premium', aiCredits: 1000, resumeVersions: 100, gmailSync: true }
+      { id: 'free', name: 'Free', ...planLimits.free },
+      { id: 'pro', name: 'Pro', ...planLimits.pro },
+      { id: 'premium', name: 'Premium', ...planLimits.premium }
     ]
   });
 });
 
 export const billingStatus = asyncHandler(async (req: any, res) => {
-  const subscription = await Subscription.findOneAndUpdate(
-    { userId: req.user.id },
-    { userId: req.user.id, plan: 'free', status: 'active' },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
+  const { subscription, limits } = await getEntitlement(req.user.id);
   const usage = await UsageCounter.find({ userId: req.user.id }).lean();
-  res.json({ success: true, data: { subscription, usage, fallback: true } });
+  res.json({ success: true, data: { subscription, limits, usage, fallback: true } });
 });
 
 export const incrementUsage = asyncHandler(async (req: any, res) => {
   const key = String(req.body.key || 'aiCredits');
-  const usage = await UsageCounter.findOneAndUpdate(
-    { userId: req.user.id, key, period: 'monthly' },
-    { $inc: { count: 1 } },
-    { upsert: true, new: true }
-  );
-  res.json({ success: true, data: usage });
+  res.json({ success: true, data: await enforceUsage(req.user.id, key) });
+});
+
+export const createCheckoutSession = asyncHandler(async (req: any, res) => {
+  res.json({ success: true, data: await createCheckout(req.user.id, String(req.body.plan || 'pro')) });
+});
+
+export const billingWebhook = asyncHandler(async (_req, res) => {
+  res.json({ success: true, received: true, mode: process.env.STRIPE_WEBHOOK_SECRET ? 'stripe' : 'safe-mode' });
 });

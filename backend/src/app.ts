@@ -7,8 +7,10 @@ import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
 import { requestLogger } from './middleware/requestLogger';
 import apiRoutes from './routes/api.routes';
+import { initObservability } from './services/observability.service';
 
 const app = express();
+initObservability();
 
 app.use(helmet());
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
