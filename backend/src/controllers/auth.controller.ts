@@ -67,7 +67,7 @@ export const login = asyncHandler(async (req, res) => {
     res.status(202).json({
       success: false,
       mfaRequired: true,
-      message: 'MFA code required. Demo fallback code is 000000 until a real authenticator provider is configured.'
+      message: 'Verification code required. Use the temporary setup code until an authenticator provider is connected.'
     });
     return;
   }
@@ -148,7 +148,7 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'Password reset token generated. Configure email delivery to send this token.',
-    demoToken: token
+    setupToken: token
   });
 });
 
@@ -191,7 +191,7 @@ export const configureMfa = asyncHandler(async (req: any, res) => {
 
   res.json({
     success: true,
-    message: enabled ? 'MFA enabled with demo code 000000.' : 'MFA disabled.',
+    message: enabled ? 'Account verification enabled with a temporary setup code.' : 'Account verification disabled.',
     recoveryCodes: enabled ? recoveryCodes : []
   });
 });

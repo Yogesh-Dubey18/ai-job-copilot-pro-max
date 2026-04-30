@@ -27,7 +27,7 @@ export default async function BillingPage() {
             {status.data.subscription.plan.toUpperCase()} - {status.data.subscription.status}
           </p>
           <p className="mt-2 text-sm text-slate-600">
-            Payment provider is configurable. Until Stripe or Razorpay keys are added, entitlement tracking runs in internal fallback mode.
+            Payment provider is configurable. Until Stripe or Razorpay keys are added, entitlement tracking runs in built-in safe mode.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {(status.data.usage.length ? status.data.usage : [{ key: 'aiCredits', count: 0, period: 'monthly' }]).map((item) => (

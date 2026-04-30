@@ -21,7 +21,23 @@ export function ResponseAssistantForm({ applicationId }: { applicationId: string
       })
     });
     const payload = await response.json().catch(() => ({}));
-    setReply(response.ok ? `${payload.data.subject}\n\n${payload.data.detailedReply}\n\n${payload.data.shortChannelReply}\n\nWarning: ${payload.data.warnings?.[0]}` : payload.message || 'Could not generate reply.');
+    setReply(
+      response.ok
+        ? JSON.stringify(
+            {
+              subject: payload.data.subject,
+              body: payload.data.body || payload.data.detailedReply,
+              tone: payload.data.tone,
+              factsUsed: payload.data.factsUsed || [],
+              requiresUserInput: Boolean(payload.data.requiresUserInput),
+              riskFlags: payload.data.riskFlags || payload.data.warnings || [],
+              copyReady: Boolean(payload.data.copyReady)
+            },
+            null,
+            2
+          )
+        : payload.message || 'Could not generate reply.'
+    );
     setPending(false);
   };
 
@@ -31,11 +47,19 @@ export function ResponseAssistantForm({ applicationId }: { applicationId: string
       <textarea name="companyMessage" required rows={5} placeholder="Paste company message" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
       <div className="grid gap-3 sm:grid-cols-2">
         <select name="intent" className="rounded-md border border-slate-200 px-3 py-2 text-sm">
+          <option value="request_more_info">Interview availability</option>
+          <option value="request_more_info">Salary expectation</option>
+          <option value="request_more_info">Notice period</option>
+          <option value="accept">Assignment submission</option>
+          <option value="ask_question">Follow-up after applying</option>
+          <option value="ask_question">Follow-up after interview</option>
           <option value="accept">Accept</option>
           <option value="negotiate">Negotiate</option>
           <option value="ask_question">Ask question</option>
           <option value="decline_politely">Decline politely</option>
           <option value="request_more_info">Request more info</option>
+          <option value="negotiate">Offer negotiation</option>
+          <option value="accept">Referral request</option>
         </select>
         <select name="tone" className="rounded-md border border-slate-200 px-3 py-2 text-sm">
           <option value="professional">Professional</option>

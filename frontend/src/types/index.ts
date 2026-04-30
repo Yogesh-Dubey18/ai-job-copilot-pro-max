@@ -13,7 +13,8 @@ export type ApplicationStatus =
   | 'hr_round'
   | 'offered'
   | 'rejected'
-  | 'joined';
+  | 'joined'
+  | 'withdrawn';
 
 export interface Application {
   _id: string;
@@ -25,6 +26,7 @@ export interface Application {
   appliedDate?: string;
   resumeVersionUsed?: string;
   portalSource?: string;
+  recruiterContact?: string;
   notes?: string;
   timeline?: Array<{ status: ApplicationStatus; note: string; date: string; source?: string; nextAction?: string }>;
   responses?: Array<{ subject: string; shortReply: string; detailedReply: string; shortChannelReply: string; warnings: string[] }>;
@@ -103,6 +105,7 @@ export interface Job {
   salaryMin?: number;
   salaryMax?: number;
   remote?: boolean;
+  skills?: string[];
   createdAt?: string;
 }
 
@@ -158,7 +161,10 @@ export interface DailyDigest {
   highMatchJobs: number;
   topJobs?: Array<{ _id: string; title: string; company: string; location?: string }>;
   urgentApplyJobs?: string[];
+  remoteJobs?: number;
   missingSkills?: string[];
+  resumeImprovements?: string[];
+  notifications?: Array<{ type: string; title: string; body: string }>;
   followUps: number;
   interviews: number;
   mission: string[];

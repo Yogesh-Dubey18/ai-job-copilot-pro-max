@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { ResponseAssistantForm } from '@/components/ResponseAssistantForm';
+import { StandaloneReplyForm } from '@/components/StandaloneReplyForm';
 import { getApplications, getSessionToken } from '@/lib/server/backend';
 
 export default async function ResponsesPage() {
@@ -18,7 +19,7 @@ export default async function ResponsesPage() {
           {first ? (
             <ResponseAssistantForm applicationId={first._id} />
           ) : (
-            <p className="rounded-lg border border-dashed border-slate-300 p-6 text-slate-500">Add an application first, then generate reply drafts.</p>
+            <StandaloneReplyForm />
           )}
         </div>
       </main>

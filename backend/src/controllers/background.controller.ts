@@ -24,8 +24,8 @@ export const queueStatus = asyncHandler(async (_req, res) => {
   res.json({
     success: true,
     data: {
-      driver: process.env.REDIS_URL ? 'bullmq' : 'in_memory_fallback',
-      queues: queues.map((name) => ({ name, status: process.env.REDIS_URL ? 'ready' : 'fallback_documented' }))
+      driver: process.env.REDIS_URL ? 'bullmq' : 'Redis not connected',
+      queues: queues.map((name) => ({ name, status: process.env.REDIS_URL ? 'ready' : 'manual safe mode' }))
     }
   });
 });

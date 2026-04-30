@@ -16,7 +16,8 @@ const styles: Record<ApplicationStatus, string> = {
   hr_round: 'bg-fuchsia-100 text-fuchsia-700',
   offered: 'bg-emerald-100 text-emerald-700',
   rejected: 'bg-rose-100 text-rose-700',
-  joined: 'bg-lime-100 text-lime-700'
+  joined: 'bg-lime-100 text-lime-700',
+  withdrawn: 'bg-slate-200 text-slate-700'
 };
 
 export function StatusBadge({ status }: { status: ApplicationStatus }) {

@@ -21,7 +21,7 @@ export default function FeaturesPage() {
           {features.map((feature) => (
             <article key={feature} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="font-bold">{feature}</h2>
-              <p className="mt-2 text-sm text-slate-600">Production-ready workflow with safe fallback mode when external credentials are not configured.</p>
+              <p className="mt-2 text-sm text-slate-600">Production-ready workflow that stays usable while external integrations are being connected.</p>
             </article>
           ))}
         </div>

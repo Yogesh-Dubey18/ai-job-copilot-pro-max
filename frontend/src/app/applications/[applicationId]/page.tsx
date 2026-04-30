@@ -36,6 +36,26 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
               <dt className="text-sm font-semibold text-slate-500">Follow up</dt>
               <dd className="mt-1">{application.followUpDate || 'No follow-up scheduled'}</dd>
             </div>
+            <div>
+              <dt className="text-sm font-semibold text-slate-500">Source</dt>
+              <dd className="mt-1">{application.portalSource || 'Tracker'}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-semibold text-slate-500">Resume version</dt>
+              <dd className="mt-1">{application.resumeVersionUsed || 'Not selected'}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-semibold text-slate-500">Recruiter contact</dt>
+              <dd className="mt-1">{application.recruiterContact || 'Not added'}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-semibold text-slate-500">Interview prep</dt>
+              <dd className="mt-1"><a href={`/interview/${application._id}`} className="font-semibold underline">Open prep plan</a></dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-sm font-semibold text-slate-500">Notes</dt>
+              <dd className="mt-1">{application.notes || 'No notes yet'}</dd>
+            </div>
           </dl>
         </section>
         <section className="mt-8 grid gap-6">
@@ -51,6 +71,21 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           </div>
           <ManualApplyForm applicationId={application._id} />
           <ResponseAssistantForm applicationId={application._id} />
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold">Company replies</h2>
+            <div className="mt-4 grid gap-3">
+              {(application.responses || []).length === 0 ? (
+                <p className="text-sm text-slate-500">No reply drafts yet.</p>
+              ) : (
+                (application.responses || []).map((response, index) => (
+                  <div key={`${response.subject}-${index}`} className="rounded-md bg-slate-50 p-3 text-sm">
+                    <p className="font-semibold">{response.subject}</p>
+                    <p className="mt-1 whitespace-pre-wrap text-slate-600">{response.detailedReply || response.shortReply}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
           <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-bold">Timeline</h2>
             <div className="mt-4 grid gap-3">

@@ -43,7 +43,9 @@ export function GmailControls() {
         <button disabled={pending} onClick={() => post('/api/gmail/sync')} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-60">Sync status</button>
         <button disabled={pending} onClick={() => post('/api/gmail/disconnect')} className="rounded-md border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 disabled:opacity-60">Disconnect and delete synced data</button>
       </div>
-      <p className="mt-3 text-sm text-slate-600">Connected: {state.connected ? 'Yes' : 'No'} · Mode: {state.fallback ? 'Fallback until OAuth credentials are set' : 'OAuth ready'}</p>
+      <p className="mt-3 text-sm text-slate-600">
+        Gmail integration: {state.connected ? 'Connected' : 'Not connected'} - {state.fallback ? 'Add OAuth credentials to enable live sync' : 'OAuth ready'}
+      </p>
       {state.setupRequired?.length ? <p className="mt-2 text-sm text-amber-700">Needs: {state.setupRequired.join(', ')}</p> : null}
       {message ? <p className="mt-3 rounded-md bg-slate-50 p-3 text-sm">{message}</p> : null}
     </section>

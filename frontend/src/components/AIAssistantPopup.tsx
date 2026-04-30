@@ -13,7 +13,10 @@ const actions = [
   ['follow-up', 'Reply to company'],
   ['interview', 'Prepare interview round'],
   ['rejection', 'Explain rejection'],
-  ['today', 'What should I do today?']
+  ['portfolio', 'Create portfolio'],
+  ['today', 'Suggest today\'s plan'],
+  ['today', 'Why dashboard is empty?'],
+  ['analyze-job', 'How to improve ATS score?']
 ];
 
 export function AIAssistantPopup() {
@@ -35,7 +38,7 @@ export function AIAssistantPopup() {
       setResponse(
         payload.data?.summary ||
           payload.message ||
-          'Assistant fallback: upload resume at /resume/upload, track manual applications in job details, and configure Gemini/Gmail/job APIs in Settings when ready.'
+          'Upload your resume, track manual applications from job details, and connect Gemini, Gmail, or job source credentials in Settings when ready.'
       );
     });
   };
@@ -47,7 +50,7 @@ export function AIAssistantPopup() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 font-bold">
               <Sparkles className="h-4 w-4 text-teal-700" />
-              AI Copilot
+              Job Copilot
             </div>
             <button type="button" onClick={() => setOpen(false)} className="rounded-md p-1 hover:bg-slate-100" title="Close assistant">
               <X className="h-4 w-4" />
@@ -64,7 +67,7 @@ export function AIAssistantPopup() {
           <div className="mt-4 grid grid-cols-1 gap-2">
             {actions.map(([value, label]) => (
               <button
-                key={value}
+                key={`${value}-${label}`}
                 type="button"
                 disabled={pending}
                 onClick={() => runAction(value)}
@@ -81,9 +84,10 @@ export function AIAssistantPopup() {
           type="button"
           onClick={() => setOpen(true)}
           className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-white shadow-xl hover:bg-slate-800"
-          title="Open AI Copilot"
+          title="Ask Job Copilot"
         >
           <Bot className="h-6 w-6" />
+          <span className="sr-only">Ask Job Copilot</span>
         </button>
       )}
     </div>

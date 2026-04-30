@@ -44,6 +44,7 @@ const manualApplySchema = z.object({
   resumeVersionUsed: z.string().optional(),
   coverLetterUsed: z.string().optional(),
   contactName: z.string().optional(),
+  recruiterContact: z.string().optional(),
   notes: z.string().optional(),
   followUpDate: z.string().optional(),
   checklist: z
@@ -168,6 +169,8 @@ export const manualApply = asyncHandler(async (req: any, res) => {
   application.resumeVersionUsed = data.resumeVersionUsed || application.resumeVersionUsed;
   application.coverLetterUsed = data.coverLetterUsed || application.coverLetterUsed;
   application.contactName = data.contactName || application.contactName;
+  application.recruiterContact = data.recruiterContact || application.recruiterContact;
+  application.recruiterEmail = data.recruiterContact || application.recruiterEmail;
   application.notes = data.notes || application.notes;
   application.manualChecklist = {
     resumeTailored: Boolean(data.checklist?.resumeTailored),
@@ -207,6 +210,11 @@ export const generateCompanyResponse = asyncHandler(async (req: any, res) => {
     intent: data.intent,
     tone: data.tone,
     subject,
+    body: `${shortReply}\n\nRegarding your message: "${data.companyMessage.slice(0, 500)}"\n\nPlease let me know the next step, timeline, and any details you need from my side.`,
+    factsUsed: ['Application company and role', 'Company message supplied by user'],
+    requiresUserInput: false,
+    riskFlags: ['Verify dates, compensation, notice period, and personal details before sending.'],
+    copyReady: true,
     shortReply,
     detailedReply: `${shortReply}\n\nRegarding your message: "${data.companyMessage.slice(0, 500)}"\n\nPlease let me know the next step, timeline, and any details you need from my side.`,
     shortChannelReply: shortReply,

@@ -72,7 +72,7 @@ export function ResumeUploadClient() {
         <input name="file" type="file" accept=".pdf,.doc,.docx,.txt" className="rounded-md border border-slate-200 px-3 py-2" />
       </label>
       <label className="grid gap-1 text-sm font-medium">
-        Optional resume text fallback
+        Optional resume text for higher accuracy
         <textarea name="parsedText" rows={8} className="rounded-md border border-slate-200 px-3 py-2" placeholder="Paste resume text for best ATS accuracy." />
       </label>
       <button disabled={pending} className="w-fit rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">

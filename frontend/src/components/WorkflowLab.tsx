@@ -81,7 +81,7 @@ export function WorkflowLab() {
           <div>
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-2xl font-black">{result.title}</h2>
-              {result.fallback ? <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">Fallback</span> : null}
+              {result.fallback ? <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">Safe mode</span> : null}
             </div>
             <p className="mt-3 text-slate-600">{result.summary}</p>
             <ul className="mt-5 space-y-3">

@@ -45,14 +45,20 @@ export async function uploadResumeAction(_prev: ActionState, formData: FormData)
 
 export async function atsCheckAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const resumeId = String(formData.get('resumeId') || '');
-  const result = await backendFetch<{ success: boolean; data: { atsScore: number; missingSkills: string[] } }>(
+  const result = await backendFetch<{ success: boolean; data: { atsScore: number; missingSkills: string[]; breakdown?: Record<string, number>; formattingIssues?: string[] } }>(
     `/api/resumes/${resumeId}/ats-check`,
     {
       method: 'POST',
       body: JSON.stringify({ jobDescription: String(formData.get('jobDescription') || '') })
     }
   );
-  return { ok: true, message: `ATS score ${result.data.atsScore}. Missing: ${result.data.missingSkills.join(', ') || 'none'}.` };
+  const breakdown = result.data.breakdown
+    ? Object.entries(result.data.breakdown).map(([key, value]) => `${key}: ${value}`).join(' | ')
+    : '';
+  return {
+    ok: true,
+    message: `ATS score ${result.data.atsScore}. Missing: ${result.data.missingSkills.join(', ') || 'none'}. ${breakdown}`
+  };
 }
 
 export async function tailorResumeAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

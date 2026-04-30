@@ -72,7 +72,9 @@ router.post('/auth/mfa', protect, configureMfa);
 
 router.get('/billing/plans', billingPlans);
 router.get('/billing/status', protect, billingStatus);
+router.get('/billing/subscription', protect, billingStatus);
 router.post('/billing/usage', protect, incrementUsage);
+router.get('/billing/usage', protect, billingStatus);
 
 router.get('/gmail/status', protect, gmailStatus);
 router.post('/gmail/connect', protect, gmailConnect);

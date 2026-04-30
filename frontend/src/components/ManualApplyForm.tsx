@@ -30,6 +30,7 @@ export function ManualApplyForm({ jobId, applicationId }: { jobId?: string; appl
         resumeVersionUsed: form.get('resumeVersionUsed'),
         coverLetterUsed: form.get('coverLetterUsed'),
         contactName: form.get('contactName'),
+        recruiterContact: form.get('recruiterContact'),
         notes: form.get('notes'),
         followUpDate: form.get('followUpDate'),
         checklist
@@ -45,10 +46,15 @@ export function ManualApplyForm({ jobId, applicationId }: { jobId?: string; appl
       <h2 className="text-lg font-bold">Manual Apply Mode</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         <input name="dateApplied" type="date" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
-        <input name="portalSource" placeholder="Portal/source" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+        <select name="portalSource" className="rounded-md border border-slate-200 px-3 py-2 text-sm">
+          {['LinkedIn', 'Naukri', 'Indeed', 'Company Website', 'Email', 'Referral', 'Other'].map((source) => (
+            <option key={source} value={source}>{source}</option>
+          ))}
+        </select>
         <input name="resumeVersionUsed" placeholder="Resume version used" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
         <input name="coverLetterUsed" placeholder="Cover letter used" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
-        <input name="contactName" placeholder="Recruiter/company contact" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+        <input name="contactName" placeholder="Recruiter name" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+        <input name="recruiterContact" placeholder="Recruiter email or LinkedIn" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
         <input name="followUpDate" type="date" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
       </div>
       <textarea name="notes" rows={3} placeholder="Notes" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />

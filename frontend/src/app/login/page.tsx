@@ -67,6 +67,11 @@ export default function LoginPage() {
         </button>
 
         <p className="mt-4 text-center text-sm text-slate-600">
+          <Link href="/forgot-password" className="font-semibold text-slate-950">
+            Forgot password?
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-slate-600">
           New here?{' '}
           <Link href="/register" className="font-semibold text-slate-950">
             Create account

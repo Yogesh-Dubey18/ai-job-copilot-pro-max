@@ -9,6 +9,9 @@ export interface ScrapedJobPayload {
 
 export const normalizeScrapedJob = (payload: ScrapedJobPayload) => {
   const url = sanitizeOperationalUrl(payload.url || '');
+  const text = `${payload.location || ''} ${payload.description || ''}`;
+  const remoteType = /remote/i.test(text) ? 'remote' : /hybrid/i.test(text) ? 'hybrid' : /onsite|office/i.test(text) ? 'onsite' : 'unspecified';
+  const scamRiskScore = /gmail|yahoo|hotmail|fee|deposit|payment|registration charge|whatsapp only|example\.com/i.test(`${payload.url || ''} ${payload.description || ''}`) ? 65 : 10;
 
   return {
     source: payload.source || 'chrome-extension',
@@ -16,10 +19,15 @@ export const normalizeScrapedJob = (payload: ScrapedJobPayload) => {
     title: payload.title?.trim() || 'Untitled Role',
     company: payload.company?.trim() || 'Unknown Company',
     location: payload.location?.trim() || '',
-    remote: /remote/i.test(`${payload.location || ''} ${payload.description || ''}`),
+    remote: remoteType === 'remote',
+    remoteType,
     url,
+    applyUrl: url,
     description: payload.description?.trim() || 'No description captured from page.',
-    skills: inferSkills(payload.description || '')
+    skills: inferSkills(payload.description || ''),
+    sourceTrustScore: url ? 82 : 70,
+    scamRiskScore,
+    postedAt: new Date()
   };
 };
 

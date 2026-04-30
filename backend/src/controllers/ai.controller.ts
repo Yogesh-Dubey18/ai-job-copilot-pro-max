@@ -35,6 +35,7 @@ const copilotSchema = z.object({
     'interview',
     'follow-up',
     'rejection',
+    'portfolio',
     'today'
   ]),
   route: z.string().optional(),
@@ -54,6 +55,7 @@ export const createCopilot = asyncHandler(async (req, res) => {
     interview: 'mock-interview',
     'follow-up': 'gmail',
     rejection: 'next-step',
+    portfolio: 'portfolio',
     today: 'next-step'
   } as const;
   const workflow = await generateWorkflow(kindMap[payload.action], payload);

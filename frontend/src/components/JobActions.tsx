@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { analyzeJobAction, saveJobAction } from '@/app/actions/product-actions';
 
@@ -32,6 +33,20 @@ export function JobActions({ jobId }: { jobId: string }) {
       >
         Analyze fit
       </button>
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => run('analyze')}
+        className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+      >
+        Generate Application Kit
+      </button>
+      <Link href="/resume/versions" className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+        Tailor Resume
+      </Link>
+      <Link href="/interview" className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+        Prepare Interview
+      </Link>
       {message ? <p className="basis-full text-sm font-medium text-emerald-700">{message}</p> : null}
     </div>
   );

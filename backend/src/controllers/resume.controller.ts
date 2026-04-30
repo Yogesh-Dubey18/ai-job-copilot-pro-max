@@ -109,10 +109,26 @@ export const atsCheck = asyncHandler(async (req: any, res) => {
 
   const jobDescription = String(req.body.jobDescription || '');
   const result = scoreJob('', resume.parsedText, jobDescription || resume.parsedText);
+  const keywordMatch = result.atsMatchScore;
+  const skillsCoverage = result.skillMatchScore;
+  const formattingHealth = resume.parsedText.includes('|') ? 65 : 90;
+  const projectRelevance = resume.sections?.projects ? 82 : 55;
+  const impactStatements = /\d+%|\d+x|reduced|improved|built|created|launched/i.test(resume.parsedText) ? 85 : 58;
+  const contactInfo = /@|linkedin|github|phone|\+91/i.test(resume.parsedText) ? 90 : 55;
+  const overallScore = Math.round((keywordMatch + skillsCoverage + formattingHealth + projectRelevance + impactStatements + contactInfo) / 6);
   res.json({
     success: true,
     data: {
-      atsScore: result.atsMatchScore,
+      atsScore: overallScore,
+      breakdown: {
+        keywordMatch,
+        skillsCoverage,
+        formattingHealth,
+        projectRelevance,
+        impactStatements,
+        contactInfo,
+        overallScore
+      },
       missingSkills: result.missingSkills,
       matchedSkills: result.matchedSkills,
       recommendations: ['Keep reverse chronological order', 'Add measurable impact bullets', 'Use job keywords truthfully']

@@ -15,7 +15,8 @@ export const applicationStatuses = [
   'hr_round',
   'offered',
   'rejected',
-  'joined'
+  'joined',
+  'withdrawn'
 ] as const;
 
 const timelineSchema = new mongoose.Schema(
@@ -63,6 +64,7 @@ const applicationSchema = new mongoose.Schema(
     followUpDate: { type: Date },
     portalSource: { type: String, default: '' },
     contactName: { type: String, default: '' },
+    recruiterContact: { type: String, default: '' },
     notes: { type: String, default: '' },
     matchScore: { type: Number, min: 0, max: 100 },
     resumeVersionUsed: { type: String, default: '' },

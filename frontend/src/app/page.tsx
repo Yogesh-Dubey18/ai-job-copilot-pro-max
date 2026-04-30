@@ -5,7 +5,7 @@ const workflow = ['Upload Resume', 'Get Jobs', 'Tailor Resume', 'Apply', 'Track'
 const features = [
   { title: 'Resume Upload', description: 'PDF, DOCX, DOC, or TXT intake with validation and private storage.', Icon: Upload },
   { title: 'ATS Score', description: 'Keyword gaps, formatting checks, and truthful improvement suggestions.', Icon: ShieldCheck },
-  { title: 'Daily Jobs', description: 'Fresh matching jobs from connected sources or safe fallback sources scored against your profile.', Icon: BriefcaseBusiness },
+  { title: 'Daily Jobs', description: 'Fresh matching jobs from connected sources and curated sources scored against your profile.', Icon: BriefcaseBusiness },
   { title: 'AI Assistant', description: 'Route-aware job search mentor with English and Hinglish mode.', Icon: Bot },
   { title: 'Application Tracker', description: 'Pipeline statuses, timeline notes, next actions, and analytics.', Icon: FileText },
   { title: 'Interview Prep', description: 'Round prediction, technical questions, HR prompts, and daily plan.', Icon: Sparkles },

@@ -7,6 +7,7 @@ import {
   ApplicationStats,
   DailyDigest,
   Job,
+  ScoreBreakdown,
   Portfolio,
   RecommendedJob,
   Resume,
@@ -106,6 +107,14 @@ export async function getRecommendedJobs() {
 
 export async function getJob(id: string) {
   const response = await backendFetch<ApiEnvelope<Job>>(`/api/jobs/${id}`);
+  return response.data;
+}
+
+export async function getJobScore(id: string) {
+  const response = await backendFetch<ApiEnvelope<ScoreBreakdown & { nextActions?: string[] }>>(`/api/jobs/${id}/score`, {
+    method: 'POST',
+    body: JSON.stringify({})
+  });
   return response.data;
 }
 

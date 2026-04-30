@@ -124,14 +124,20 @@ export const scamCheck = asyncHandler(async (req, res) => {
   const text = `${req.body.title || ''} ${req.body.company || ''} ${req.body.description || ''} ${req.body.url || ''}`;
   const reasons = [
     /gmail|yahoo|hotmail/i.test(text) ? 'Personal email domain detected.' : '',
+    !/https?:\/\/(?!.*example\.com)/i.test(text) ? 'No official company website detected.' : '',
     /fee|deposit|payment|registration charge/i.test(text) ? 'Upfront payment language detected.' : '',
     /earn.*(lakh|crore)|guaranteed/i.test(text) ? 'Unrealistic compensation language detected.' : '',
-    /example\.com/i.test(text) ? 'Invalid documentation URL detected.' : ''
+    /bit\.ly|tinyurl|telegram|whatsapp only|example\.com/i.test(text) ? 'Suspicious or non-operational URL detected.' : '',
+    text.length < 240 ? 'Job description is too vague.' : '',
+    /(urgent hiring!!!|work from home earn|no interview)/i.test(text) ? 'Low-quality or suspicious wording detected.' : ''
   ].filter(Boolean);
   const risk = reasons.length >= 2 ? 'high' : reasons.length === 1 ? 'medium' : 'low';
   res.json({
     success: true,
     data: {
+      risk,
+      signals: reasons,
+      recommendation: risk === 'high' ? 'Do not apply until verified through official company channels.' : 'Verify company details before sharing sensitive information.',
       scamRisk: risk,
       reasons,
       safetyRecommendation: risk === 'high' ? 'Do not apply until verified through official company channels.' : 'Verify company details before sharing sensitive information.'
@@ -195,9 +201,15 @@ export const dailyDigest = asyncHandler(async (req: any, res) => {
         location: job.location
       })),
       urgentApplyJobs: highMatch.slice(0, 3).map((job) => `${job.title} at ${job.company}`),
+      remoteJobs: highMatch.filter((job) => job.remote).length,
       missingSkills: ['TypeScript', 'Testing', 'System design'].slice(0, 3),
       followUps,
       interviews,
+      resumeImprovements: ['Add measurable project impact', 'Keep reverse-chronological experience', 'Add truthful keywords from target roles'],
+      notifications: [
+        { type: 'daily_digest_ready', title: 'Daily digest ready', body: 'Review high-fit jobs and follow-ups due today.' },
+        { type: 'integration_issue', title: 'Integrations need setup', body: 'Add provider keys to unlock live job and email sync.' }
+      ],
       mission: ['Apply to 5 jobs', 'Improve ATS keywords', 'Practice 10 interview questions']
     }
   });
@@ -224,8 +236,9 @@ export const notifications = asyncHandler(async (_req: any, res) => {
   res.json({
     success: true,
     data: [
-      { _id: 'demo-follow-up', title: 'Follow-up due', body: 'Review manually applied jobs and send one follow-up.', read: false },
-      { _id: 'demo-digest', title: 'Daily digest ready', body: 'Check top matching jobs for today.', read: false }
+      { _id: 'follow-up', title: 'Follow-up due', body: 'Review manually applied jobs and send one follow-up.', read: false },
+      { _id: 'daily-digest', title: 'Daily digest ready', body: 'Check top matching jobs for today.', read: false },
+      { _id: 'integration-issue', title: 'Integration issue', body: 'Connect provider credentials to unlock live sync.', read: false }
     ]
   });
 });
@@ -241,7 +254,7 @@ export const syncIntegrations = asyncHandler(async (_req, res) => {
       imported: 3,
       duplicates: 0,
       failed: 0,
-      sources: ['demo', 'manual-url', 'chrome-extension'],
+      sources: ['curated', 'manual-url', 'chrome-extension'],
       fallback: true
     }
   });

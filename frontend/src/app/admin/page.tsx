@@ -55,7 +55,7 @@ export default async function AdminPage() {
             ['Users', overview.users],
             ['Jobs', overview.jobs],
             ['Applications', overview.applications],
-            ['Job sources', 'Demo, manual, extension'],
+            ['Job sources', 'Curated, manual, extension'],
             ['AI logs', overview.events.filter((event) => event.type.includes('ai')).length],
             ['Sync status', 'Ready'],
             ['Fake job reports', '0 open'],
