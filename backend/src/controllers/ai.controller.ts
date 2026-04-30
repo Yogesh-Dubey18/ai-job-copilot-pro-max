@@ -80,16 +80,24 @@ export const companyReply = asyncHandler(async (req, res) => {
   });
   const data = schema.parse(req.body);
   const shortReply = `Thank you for your message. I appreciate the update and would like to proceed thoughtfully.`;
+  const body = `${shortReply}\n\nRegarding: "${data.incomingMessage.slice(
+    0,
+    500
+  )}"\n\nPlease share the next steps and any details required from my side.`;
   res.json({
     success: true,
     data: {
       subject: 'Re: Hiring process',
-      replyBody: `${shortReply}\n\nRegarding: "${data.incomingMessage.slice(0, 500)}"\n\nPlease share the next steps and any details required from my side.`,
+      body,
+      replyBody: body,
+      tone: data.tone,
+      factsUsed: ['Incoming company message supplied by the user'],
+      requiresUserInput: ['Verify dates, salary numbers, notice period, and names before sending'],
+      riskFlags: ['Do not invent experience, availability, compensation, or personal details'],
       intent: data.intent,
       followUpNeeded: true,
       suggestedNextAction: 'Review the draft, verify facts, and send manually.',
-      fallback: true,
-      tone: data.tone
+      fallback: true
     }
   });
 });

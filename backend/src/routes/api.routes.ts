@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { companyReply, createApplyPack, createCopilot, createWorkflow } from '../controllers/ai.controller';
 import { adminOverview, syncJobs } from '../controllers/admin.controller';
+import { queueStatus } from '../controllers/background.controller';
+import { billingPlans, billingStatus, incrementUsage } from '../controllers/billing.controller';
+import { gmailConnect, gmailDisconnect, gmailStatus, gmailSync } from '../controllers/gmail.controller';
 import {
   analyzeJob,
   dailyDigest,
@@ -66,6 +69,17 @@ router.post('/auth/request-password-reset', requestPasswordReset);
 router.post('/auth/reset-password', resetPassword);
 router.get('/auth/me', protect, me);
 router.post('/auth/mfa', protect, configureMfa);
+
+router.get('/billing/plans', billingPlans);
+router.get('/billing/status', protect, billingStatus);
+router.post('/billing/usage', protect, incrementUsage);
+
+router.get('/gmail/status', protect, gmailStatus);
+router.post('/gmail/connect', protect, gmailConnect);
+router.post('/gmail/disconnect', protect, gmailDisconnect);
+router.post('/gmail/sync', protect, gmailSync);
+
+router.get('/queues/status', protect, requireAdmin, queueStatus);
 
 router.post('/ai/apply-pack', createApplyPack);
 router.post('/ai/workflow', protect, createWorkflow);

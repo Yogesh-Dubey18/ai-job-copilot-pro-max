@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'AI Job Copilot Pro MAX',
-  description: 'Mission control for AI-assisted job applications.'
+  description: 'AI career operating system from resume upload to job offer.'
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

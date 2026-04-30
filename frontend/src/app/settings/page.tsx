@@ -3,6 +3,7 @@ import { AppShell } from '@/components/AppShell';
 import { getSessionToken } from '@/lib/server/backend';
 import { SecurityPanel } from '@/components/SecurityPanel';
 import { PrivacyControls } from '@/components/PrivacyControls';
+import { GmailControls } from '@/components/GmailControls';
 
 export default async function SettingsPage() {
   const token = await getSessionToken();
@@ -19,6 +20,7 @@ export default async function SettingsPage() {
 
         <div className="mt-8 grid gap-4">
           <SecurityPanel />
+          <GmailControls />
           <PrivacyControls />
           {[
             ['Session security', 'Authenticated routes use an httpOnly cookie session through the Next.js BFF.'],

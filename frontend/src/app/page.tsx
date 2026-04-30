@@ -5,7 +5,7 @@ const workflow = ['Upload Resume', 'Get Jobs', 'Tailor Resume', 'Apply', 'Track'
 const features = [
   { title: 'Resume Upload', description: 'PDF, DOCX, DOC, or TXT intake with validation and private storage.', Icon: Upload },
   { title: 'ATS Score', description: 'Keyword gaps, formatting checks, and truthful improvement suggestions.', Icon: ShieldCheck },
-  { title: 'Daily Jobs', description: 'Fresh demo or API-backed jobs scored against your profile.', Icon: BriefcaseBusiness },
+  { title: 'Daily Jobs', description: 'Fresh matching jobs from connected sources or safe fallback sources scored against your profile.', Icon: BriefcaseBusiness },
   { title: 'AI Assistant', description: 'Route-aware job search mentor with English and Hinglish mode.', Icon: Bot },
   { title: 'Application Tracker', description: 'Pipeline statuses, timeline notes, next actions, and analytics.', Icon: FileText },
   { title: 'Interview Prep', description: 'Round prediction, technical questions, HR prompts, and daily plan.', Icon: Sparkles },
@@ -19,7 +19,7 @@ export default function HomePage() {
         <div className="flex flex-col justify-center">
           <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-600">
             <Sparkles className="h-4 w-4 text-teal-700" />
-            Privacy-first AI job search mission control
+            Privacy-first AI career operating system
           </div>
           <h1 className="max-w-3xl text-5xl font-black tracking-tight sm:text-6xl">
             AI Job Copilot Pro MAX
@@ -36,7 +36,7 @@ export default function HomePage() {
             <Link href="/jobs" className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-3 font-semibold hover:bg-slate-100">
               Find Jobs
             </Link>
-            <Link href="/tools" className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-3 font-semibold hover:bg-slate-100">
+            <Link href="/assistant" className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-3 font-semibold hover:bg-slate-100">
               Try AI Assistant
             </Link>
           </div>

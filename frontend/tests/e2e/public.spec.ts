@@ -13,7 +13,7 @@ test('public marketing pages render', async ({ page }) => {
 });
 
 test('auth and protected entry pages are reachable', async ({ page }) => {
-  for (const route of ['/login', '/register', '/resume/upload', '/jobs', '/applications', '/analytics', '/tools', '/admin']) {
+  for (const route of ['/login', '/register', '/resume/upload', '/jobs', '/applications', '/analytics', '/assistant', '/tools', '/admin']) {
     await page.goto(route);
     await expect(page.locator('body')).toBeVisible();
   }

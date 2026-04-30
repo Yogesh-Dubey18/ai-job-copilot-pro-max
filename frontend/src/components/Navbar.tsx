@@ -11,13 +11,14 @@ const mainLinks = [
   { href: '/jobs', label: 'Jobs', icon: BriefcaseBusiness },
   { href: '/resume', label: 'Resume', icon: FileText },
   { href: '/applications', label: 'Applications', icon: BriefcaseBusiness },
-  { href: '/tools', label: 'AI Assistant', icon: Bot }
+  { href: '/assistant', label: 'AI Assistant', icon: Bot }
 ];
 
 const moreLinks = [
   { href: '/analytics', label: 'Analytics' },
   { href: '/portfolio', label: 'Portfolio' },
-  { href: '/responses', label: 'Responses' },
+  { href: '/responses', label: 'Company Replies' },
+  { href: '/billing', label: 'Billing' },
   { href: '/daily-digest', label: 'Daily Digest' },
   { href: '/interview', label: 'Interview' },
   { href: '/profile', label: 'Profile' },

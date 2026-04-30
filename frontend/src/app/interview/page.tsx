@@ -21,7 +21,7 @@ export default async function InterviewPage() {
               {applications.map((application) => (
                 <option key={application._id} value={application._id}>{application.title} · {application.company}</option>
               ))}
-              {applications.length === 0 ? <option value="demo">Demo interview prep</option> : null}
+              {applications.length === 0 ? <option value="fallback">Create a practice interview plan</option> : null}
             </select>
           </ActionForm>
         </section>

@@ -43,8 +43,8 @@ export default async function DashboardPage() {
             <h2 className="font-bold">Analytics</h2>
             <p className="mt-1 text-sm text-slate-600">See conversion rates and match quality.</p>
           </a>
-          <a href="/tools" className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:bg-slate-50">
-            <h2 className="font-bold">AI Tools</h2>
+          <a href="/assistant" className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:bg-slate-50">
+            <h2 className="font-bold">AI Assistant</h2>
             <p className="mt-1 text-sm text-slate-600">Generate interview, salary, portfolio, and Gmail assets.</p>
           </a>
           <a href="/settings" className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:bg-slate-50">

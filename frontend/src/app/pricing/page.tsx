@@ -9,7 +9,7 @@ export default function PricingPage() {
           <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-bold">Starter</h2>
             <p className="mt-2 text-4xl font-black">Free</p>
-            <p className="mt-3 text-slate-600">Resume upload, demo jobs, tracker, and fallback AI workflows.</p>
+            <p className="mt-3 text-slate-600">Resume upload, curated job matches, tracker, and safe AI workflows.</p>
           </article>
           <article className="rounded-lg border border-slate-950 bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-bold">Pro MAX</h2>

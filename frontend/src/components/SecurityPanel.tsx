@@ -42,8 +42,8 @@ export function SecurityPanel() {
           <button className="rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">Verify token</button>
         </form>
         <div>
-          <button onClick={enableMfa} className="rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">Enable demo MFA</button>
-          <p className="mt-2 text-xs text-slate-500">Demo login MFA code: 000000.</p>
+          <button onClick={enableMfa} className="rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">Enable MFA fallback</button>
+          <p className="mt-2 text-xs text-slate-500">Temporary MFA fallback code: 000000.</p>
         </div>
       </div>
       {message ? <p className="mt-4 rounded-md bg-slate-100 p-3 text-sm text-slate-700">{message}</p> : null}

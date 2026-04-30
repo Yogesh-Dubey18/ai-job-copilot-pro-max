@@ -44,7 +44,7 @@ export function ApplicationBoard({ applications }: { applications: Application[]
             onClick={() => startTransition(() => createDemoApplications())}
             className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100 disabled:opacity-50"
           >
-            Add demo data
+            Add sample pipeline
           </button>
         </div>
 
@@ -93,7 +93,7 @@ export function ApplicationBoard({ applications }: { applications: Application[]
 
         {applications.length === 0 ? (
           <div className="p-8 text-center text-slate-500">
-            No applications yet. Add one above or use demo data to see the dashboard working.
+            No applications yet. Add one above or create a sample pipeline to see the dashboard working.
           </div>
         ) : (
           applications.map((application) => (
