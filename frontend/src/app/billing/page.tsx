@@ -27,13 +27,23 @@ export default async function BillingPage() {
             {status.data.subscription.plan.toUpperCase()} - {status.data.subscription.status}
           </p>
           <p className="mt-2 text-sm text-slate-600">
-            Payment provider is configurable. Until Stripe or Razorpay keys are added, entitlement tracking runs in built-in safe mode.
+            Online upgrade is not available yet. Contact support to upgrade.
           </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {(status.data.usage.length ? status.data.usage : [{ key: 'aiCredits', count: 0, period: 'monthly' }]).map((item) => (
+          <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            {(status.data.usage.length ? status.data.usage : [
+              { key: 'AI credits', count: 0, limit: plans.data.find((plan) => plan.id === status.data.subscription.plan)?.aiCredits || 0, period: 'monthly' },
+              { key: 'Resume versions', count: 0, limit: plans.data.find((plan) => plan.id === status.data.subscription.plan)?.resumeVersions || 0, period: 'monthly' },
+              { key: 'Job matches', count: 0, limit: 10, period: 'daily' },
+              { key: 'Gmail sync', count: status.data.subscription.plan === 'free' ? 0 : 1, limit: status.data.subscription.plan === 'free' ? 0 : 1, period: 'available' }
+            ]).map((item) => (
               <div key={item.key} className="rounded-md bg-slate-50 p-3">
                 <p className="text-sm font-semibold text-slate-600">{item.key}</p>
-                <p className="mt-1 text-2xl font-black">{item.count}</p>
+                <p className="mt-1 text-2xl font-black">{item.count}{item.limit !== undefined ? ` / ${item.limit}` : ''}</p>
+                {item.limit !== undefined && item.limit > 0 ? (
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                    <div className="h-full rounded-full bg-slate-950" style={{ width: `${Math.min(100, (item.count / item.limit) * 100)}%` }} />
+                  </div>
+                ) : null}
                 <p className="text-xs text-slate-500">{item.period}</p>
               </div>
             ))}

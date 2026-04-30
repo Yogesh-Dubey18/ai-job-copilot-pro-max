@@ -23,6 +23,13 @@ export default async function InterviewPage() {
               ))}
               {applications.length === 0 ? <option value="fallback">Create a practice interview plan</option> : null}
             </select>
+            {applications.length === 0 ? (
+              <div className="grid gap-3 md:grid-cols-2">
+                <input name="role" placeholder="Role, for example Full Stack Developer" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+                <input name="company" placeholder="Company name" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+                <textarea name="jobDescription" rows={5} placeholder="Paste job description for a manual practice plan" className="rounded-md border border-slate-200 px-3 py-2 text-sm md:col-span-2" />
+              </div>
+            ) : null}
           </ActionForm>
         </section>
       </main>

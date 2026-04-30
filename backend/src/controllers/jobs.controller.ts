@@ -30,6 +30,8 @@ const applicationSchema = z.object({
   followUpDate: z.string().optional(),
   matchScore: z.number().min(0).max(100).optional(),
   resumeVersionUsed: z.string().optional(),
+  sourcePlatform: z.string().optional(),
+  notes: z.string().optional(),
   tailoredResume: z.string().optional(),
   coverLetter: z.string().optional(),
   recruiterEmail: z.string().optional(),
@@ -45,6 +47,12 @@ const manualApplySchema = z.object({
   coverLetterUsed: z.string().optional(),
   contactName: z.string().optional(),
   recruiterContact: z.string().optional(),
+  roleTitle: z.string().optional(),
+  company: z.string().optional(),
+  sourcePlatform: z.string().optional(),
+  jobUrl: z.string().optional(),
+  status: z.enum(applicationStatuses).optional(),
+  matchScore: z.number().min(0).max(100).optional(),
   notes: z.string().optional(),
   followUpDate: z.string().optional(),
   checklist: z
@@ -75,7 +83,7 @@ export const listJobs = asyncHandler(async (req, res) => {
           location: 'Delhi Hybrid',
           description:
             'Full stack developer role for React Next.js Node.js Express MongoDB TypeScript REST API projects. Open to fresher and junior candidates with strong portfolio work.',
-          source: 'sample'
+          source: 'curated'
         },
         {
           title: 'Full Stack Developer Intern',
@@ -83,7 +91,7 @@ export const listJobs = asyncHandler(async (req, res) => {
           location: 'Delhi Remote',
           description:
             'Internship for full stack developer using JavaScript React Node.js MongoDB Git APIs and Tailwind. Fresher friendly role with mentor support.',
-          source: 'sample'
+          source: 'curated'
         }
       ].map((sample) => {
         const normalized = normalizeScrapedJob(sample);
@@ -156,16 +164,18 @@ export const manualApply = asyncHandler(async (req: any, res) => {
     application = await Application.create({
       userId: req.user.id,
       jobId: job?._id,
-      title: job?.title || 'Manual Application',
-      company: job?.company || 'Company',
-      status: 'manually_applied'
+      title: data.roleTitle || job?.title || 'Manual Application',
+      company: data.company || job?.company || 'Company',
+      status: data.status || 'manually_applied',
+      matchScore: data.matchScore
     });
   }
 
   application.status = 'manually_applied';
   application.appliedDate = data.dateApplied ? new Date(data.dateApplied) : new Date();
   application.followUpDate = data.followUpDate ? new Date(data.followUpDate) : application.followUpDate;
-  application.portalSource = data.portalSource || application.portalSource;
+  application.portalSource = data.sourcePlatform || data.portalSource || application.portalSource;
+  application.matchScore = data.matchScore ?? application.matchScore;
   application.resumeVersionUsed = data.resumeVersionUsed || application.resumeVersionUsed;
   application.coverLetterUsed = data.coverLetterUsed || application.coverLetterUsed;
   application.contactName = data.contactName || application.contactName;
@@ -183,7 +193,7 @@ export const manualApply = asyncHandler(async (req: any, res) => {
   application.timeline.push({
     status: 'manually_applied',
     note: data.notes || 'User confirmed manual application submission.',
-    source: data.portalSource || 'manual_apply',
+    source: data.sourcePlatform || data.portalSource || 'manual_apply',
     nextAction: 'Track response and follow up on schedule.',
     date: new Date()
   });
@@ -270,7 +280,9 @@ export const createApplication = asyncHandler(async (req: any, res) => {
     userId: req.user.id,
     appliedDate: data.appliedDate ? new Date(data.appliedDate) : undefined,
     followUpDate: data.followUpDate ? new Date(data.followUpDate) : undefined,
-    timeline: [{ status: data.status, note: 'Application created.' }]
+    portalSource: data.sourcePlatform || '',
+    notes: data.notes || '',
+    timeline: [{ status: data.status, note: data.notes || 'Application created.', source: data.sourcePlatform || 'manual', nextAction: getNextAction(data.status) }]
   });
 
   res.status(201).json({ success: true, data: application });
@@ -380,8 +392,8 @@ export const applicationAnalytics = asyncHandler(async (req: any, res) => {
       interviewRate: total ? Math.round((interviews / total) * 100) : 0,
       offerRate: total ? Math.round((offers / total) * 100) : 0,
       avgMatchScore,
-      bestResumeVersion: applications.find((item) => item.resumeVersionUsed)?.resumeVersionUsed || 'Base resume',
-      bestJobSource: 'curated/manual',
+      bestResumeVersion: total ? applications.find((item) => item.resumeVersionUsed)?.resumeVersionUsed || 'Not enough data yet' : 'Not enough data yet',
+      bestJobSource: total ? applications.find((item) => item.portalSource)?.portalSource || 'Not enough data yet' : 'Not enough data yet',
       recentCompanies: applications.slice(0, 8).map((item) => item.company)
     }
   });

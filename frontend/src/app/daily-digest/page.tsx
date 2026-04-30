@@ -12,6 +12,10 @@ export default async function DailyDigestPage() {
     <AppShell>
       <main className="mx-auto min-h-screen max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <h1 className="text-4xl font-black tracking-tight">Daily Digest</h1>
+        <p className="mt-2 text-sm text-slate-600">Last updated {new Date().toLocaleString()}.</p>
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm">
+          Live job and email sync are not connected yet. You can still use curated jobs, manual import, and manual tracking.
+        </div>
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             ['Jobs found', digest.jobsFound],
@@ -30,7 +34,10 @@ export default async function DailyDigestPage() {
           <h2 className="text-xl font-bold">Today&apos;s mission</h2>
           <ul className="mt-4 grid gap-3">
             {digest.mission.map((item) => (
-              <li key={item} className="rounded-md bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">{item}</li>
+              <li key={item} className="rounded-md bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-950 text-xs text-white">✓</span>
+                {item}
+              </li>
             ))}
           </ul>
         </section>

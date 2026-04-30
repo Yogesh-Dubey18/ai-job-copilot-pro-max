@@ -54,8 +54,8 @@ import {
   saveFromExtension,
   updateApplicationStatus
 } from '../controllers/jobs.controller';
-import { deleteAccount, exportMyData, getProfile, updateProfile } from '../controllers/profile.controller';
-import { atsCheck, deleteResume, exportResume, getResume, listResumes, parseResume, resumeVersions, tailorResume, uploadResume } from '../controllers/resume.controller';
+import { deleteAccount, exportMyData, getProfile, updateProfile, updateProfileResumeText } from '../controllers/profile.controller';
+import { atsCheck, deleteResume, exportResume, getResume, listResumes, parseResume, resumeVersions, saveManualResumeText, tailorResume, uploadResume } from '../controllers/resume.controller';
 import { protect, requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -92,6 +92,7 @@ router.post('/ai/company-reply', protect, companyReply);
 
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
+router.put('/profile/resume-text', protect, updateProfileResumeText);
 router.get('/profile/export', protect, exportMyData);
 router.delete('/profile', protect, deleteAccount);
 
@@ -99,6 +100,7 @@ router.post('/resumes/upload', protect, uploadResume);
 router.get('/resumes', protect, listResumes);
 router.get('/resumes/:id', protect, getResume);
 router.post('/resumes/:id/parse', protect, parseResume);
+router.post('/resumes/:id/manual-text', protect, saveManualResumeText);
 router.post('/resumes/:id/ats-check', protect, atsCheck);
 router.post('/resumes/:id/tailor/:jobId', protect, tailorResume);
 router.get('/resumes/:id/versions', protect, resumeVersions);

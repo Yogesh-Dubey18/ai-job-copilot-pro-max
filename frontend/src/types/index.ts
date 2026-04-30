@@ -110,19 +110,23 @@ export interface Job {
 }
 
 export interface ScoreBreakdown {
-  finalScore: number;
-  jobFitScore: number;
-  atsMatchScore: number;
-  skillMatchScore: number;
-  experienceFitScore: number;
-  locationFitScore: number;
-  salaryFitScore: number;
+  profileIncomplete?: boolean;
+  finalScore: number | null;
+  jobFitScore: number | null;
+  atsMatchScore: number | null;
+  skillMatchScore: number | null;
+  experienceFitScore: number | null;
+  locationFitScore: number | null;
+  salaryFitScore: number | null;
+  sourceTrustScore?: number;
   companyQualityScore: number;
   scamRiskScore: number;
   matchedSkills: string[];
   missingSkills: string[];
-  applyPriority: 'Apply Now' | 'Tailor First' | 'Improve Skills First' | 'Skip';
+  applyPriority: 'Apply Now' | 'Tailor First' | 'Improve First' | 'Improve Skills First' | 'Skip' | 'Profile incomplete';
   aiRecommendation: string;
+  reasons?: string[];
+  nextActions?: string[];
 }
 
 export interface RecommendedJob {
@@ -151,7 +155,10 @@ export interface Resume {
     education?: string;
     projects?: string;
   };
-  atsScore: number;
+  atsScore: number | null;
+  manualText?: string;
+  extractionStatus?: 'parsed' | 'manual_text' | 'needs_manual_text';
+  detectedSkills?: string[];
   versions: ResumeVersion[];
   createdAt?: string;
 }

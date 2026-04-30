@@ -32,7 +32,7 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
 }
 
 export async function uploadResumeAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await backendFetch('/api/resumes/upload', {
+  const result = await backendFetch<{ success: boolean; data: { extractionStatus?: string; atsScore?: number | null } }>('/api/resumes/upload', {
     method: 'POST',
     body: JSON.stringify({
       title: String(formData.get('title') || 'Base Resume'),
@@ -40,18 +40,24 @@ export async function uploadResumeAction(_prev: ActionState, formData: FormData)
     })
   });
   revalidatePath('/resume');
-  return { ok: true, message: 'Resume uploaded and stored.' };
+  if (result.data.extractionStatus === 'needs_manual_text') {
+    return { ok: true, message: 'Readable resume text could not be extracted. Paste clean resume text manually.' };
+  }
+  return { ok: true, message: `Resume uploaded and analyzed. ATS score ${result.data.atsScore ?? 'not available yet'}.` };
 }
 
 export async function atsCheckAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const resumeId = String(formData.get('resumeId') || '');
-  const result = await backendFetch<{ success: boolean; data: { atsScore: number; missingSkills: string[]; breakdown?: Record<string, number>; formattingIssues?: string[] } }>(
+  const result = await backendFetch<{ success: boolean; data: { atsScore: number | null; unavailable?: boolean; message?: string; missingSkills: string[]; breakdown?: Record<string, number | null>; formattingIssues?: string[] } }>(
     `/api/resumes/${resumeId}/ats-check`,
     {
       method: 'POST',
       body: JSON.stringify({ jobDescription: String(formData.get('jobDescription') || '') })
     }
   );
+  if (result.data.unavailable) {
+    return { ok: false, message: result.data.message || 'Paste clean resume text manually before ATS analysis.' };
+  }
   const breakdown = result.data.breakdown
     ? Object.entries(result.data.breakdown).map(([key, value]) => `${key}: ${value}`).join(' | ')
     : '';
@@ -86,10 +92,13 @@ export async function saveJobAction(jobId: string): Promise<ActionState> {
 }
 
 export async function analyzeJobAction(jobId: string): Promise<ActionState> {
-  const result = await backendFetch<{ success: boolean; data: { finalScore: number; applyPriority: string } }>(`/api/jobs/${jobId}/analyze`, {
+  const result = await backendFetch<{ success: boolean; data: { finalScore: number | null; applyPriority: string; profileIncomplete?: boolean } }>(`/api/jobs/${jobId}/analyze`, {
     method: 'POST',
     body: JSON.stringify({})
   });
+  if (result.data.profileIncomplete) {
+    return { ok: false, message: 'Complete your profile and upload a readable resume to calculate a real job score.' };
+  }
   return { ok: true, message: `Fit score ${result.data.finalScore}. Priority: ${result.data.applyPriority}.` };
 }
 
@@ -114,7 +123,7 @@ export async function generatePortfolioAction(): Promise<ActionState> {
 }
 
 export async function interviewPrepAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const applicationId = String(formData.get('applicationId') || 'demo');
+  const applicationId = String(formData.get('applicationId') || 'practice');
   const result = await backendFetch<{ success: boolean; data: { preparationPlan: string[] } }>(
     `/api/interviews/prep/${applicationId}`,
     {

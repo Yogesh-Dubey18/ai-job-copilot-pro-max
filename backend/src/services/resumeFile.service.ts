@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import PDFDocument from 'pdfkit';
 import { AppError } from '../utils/AppError';
+import { isReadableResumeText, sanitizeResumeText } from '../utils/resumeText';
 
 const allowedMimeTypes = new Set([
   'application/pdf',
@@ -11,7 +12,8 @@ const allowedMimeTypes = new Set([
 ]);
 
 export const parseResumeFile = async (mimeType: string, fileBase64 = '', fallbackText = '') => {
-  if (fallbackText.trim()) return fallbackText.trim();
+  const manualText = sanitizeResumeText(fallbackText);
+  if (manualText) return manualText;
   if (!fileBase64) throw new AppError('Resume text or file content is required.', 400);
   if (!allowedMimeTypes.has(mimeType)) throw new AppError('Only PDF, DOC, DOCX, or TXT resumes are supported.', 400);
 
@@ -20,39 +22,35 @@ export const parseResumeFile = async (mimeType: string, fileBase64 = '', fallbac
 
   const buffer = Buffer.from(fileBase64, 'base64');
   try {
+    let extracted = '';
     if (mimeType === 'text/plain') {
-      return buffer.toString('utf8').replace(/\s+/g, ' ').trim();
-    }
-
-    if (mimeType === 'application/pdf') {
+      extracted = buffer.toString('utf8');
+    } else if (mimeType === 'application/pdf') {
       const pdfParse = (await import('pdf-parse')).default;
       const parsed = await pdfParse(buffer);
-      return parsed.text.replace(/\s+/g, ' ').trim();
-    }
-
-    if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      extracted = parsed.text;
+    } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       const mammoth = await import('mammoth');
       const parsed = await mammoth.extractRawText({ buffer });
-      return parsed.value.replace(/\s+/g, ' ').trim();
+      extracted = parsed.value;
+    } else {
+      extracted = buffer.toString('utf8');
     }
 
-    return buffer.toString('utf8').replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim();
+    const clean = sanitizeResumeText(extracted);
+    return isReadableResumeText(clean) || mimeType === 'text/plain' ? clean : '';
   } catch {
-    return [
-      'Resume file uploaded successfully.',
-      'Automatic text extraction could not read the full file in this environment.',
-      'Paste resume text in the upload form for the most accurate ATS analysis.',
-      buffer.toString('utf8').replace(/[^\x20-\x7E\n]/g, ' ').slice(0, 5000)
-    ].join('\n');
+    return '';
   }
 };
 
 export const buildResumeExport = async (format: string, fileName: string, content: string) => {
+  const safeContent = sanitizeResumeText(content) || 'Readable resume text is not available yet. Paste clean resume text before exporting.';
   if (format === 'docx') {
     const doc = new Document({
       sections: [
         {
-          children: content.split(/\n+/).map((line) => new Paragraph({ children: [new TextRun(line)] }))
+          children: safeContent.split(/\n+/).map((line) => new Paragraph({ children: [new TextRun(line)] }))
         }
       ]
     });
@@ -70,7 +68,7 @@ export const buildResumeExport = async (format: string, fileName: string, conten
     doc.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
-    doc.fontSize(12).text(content, { lineGap: 4 });
+    doc.fontSize(12).text(safeContent, { lineGap: 4 });
     doc.end();
   });
 

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { env } from '../config/env';
+import { sanitizeForAiContext } from '../utils/resumeText';
 
 export interface ApplyPack {
   matchScore: number;
@@ -12,8 +13,8 @@ export interface ApplyPack {
 
 const fallbackApplyPack = (profileText: string, reason: string): ApplyPack => ({
   matchScore: 0,
-  tailoredResume: profileText,
-  coverLetter: 'Please configure your GEMINI_API_KEY in the backend environment to generate this.',
+  tailoredResume: sanitizeForAiContext(profileText),
+  coverLetter: 'Application Kit generation is temporarily unavailable. Your saved resume text is safe and ready for manual review.',
   recruiterEmail: reason,
   missingSkills: [],
   fallback: true
@@ -35,8 +36,10 @@ export const generateApplyPack = async (
   profileText: string,
   jobDescription: string
 ): Promise<ApplyPack> => {
+  const safeProfileText = sanitizeForAiContext(profileText);
+  const safeJobDescription = sanitizeForAiContext(jobDescription);
   if (!env.GEMINI_API_KEY) {
-    return fallbackApplyPack(profileText, 'AI key missing. Fallback activated.');
+    return fallbackApplyPack(safeProfileText, 'AI generation is not connected yet.');
   }
 
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
@@ -46,10 +49,10 @@ export const generateApplyPack = async (
 You are an expert career coach and ATS optimizer.
 
 User Profile:
-${profileText}
+${safeProfileText}
 
 Job Description:
-${jobDescription}
+${safeJobDescription}
 
 Return JSON only. Do not include markdown.
 The resume must be ATS-friendly and strictly reverse-chronological.
@@ -74,14 +77,14 @@ Output exactly this shape:
     return {
       matchScore: Number(parsed.matchScore) || 0,
       missingSkills: Array.isArray(parsed.missingSkills) ? parsed.missingSkills : [],
-      tailoredResume: String(parsed.tailoredResume || profileText),
+      tailoredResume: sanitizeForAiContext(String(parsed.tailoredResume || safeProfileText)),
       coverLetter: String(parsed.coverLetter || ''),
       recruiterEmail: String(parsed.recruiterEmail || ''),
       fallback: false
     };
   } catch (error) {
     console.error('AI generation error:', error);
-    return fallbackApplyPack(profileText, 'AI generation failed. Fallback activated.');
+    return fallbackApplyPack(safeProfileText, 'AI generation could not complete right now.');
   }
 };
 
@@ -163,8 +166,8 @@ Return JSON only for an AI job-search SaaS workflow.
 Workflow kind: ${kind}
 Role: ${input.role || ''}
 Company: ${input.company || ''}
-Profile: ${input.profileText || ''}
-Job description: ${input.jobDescription || ''}
+Profile: ${sanitizeForAiContext(input.profileText || '')}
+Job description: ${sanitizeForAiContext(input.jobDescription || '')}
 
 Output exactly:
 {

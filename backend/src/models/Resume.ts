@@ -16,7 +16,14 @@ const resumeSchema = new mongoose.Schema(
     title: { type: String, default: 'Base Resume' },
     fileName: { type: String, default: '' },
     mimeType: { type: String, default: 'text/plain' },
-    parsedText: { type: String, required: true },
+    parsedText: { type: String, default: '' },
+    manualText: { type: String, default: '' },
+    extractionStatus: {
+      type: String,
+      enum: ['parsed', 'manual_text', 'needs_manual_text'],
+      default: 'parsed'
+    },
+    detectedSkills: [{ type: String }],
     sections: {
       summary: { type: String, default: '' },
       skills: [{ type: String }],
@@ -24,7 +31,7 @@ const resumeSchema = new mongoose.Schema(
       education: { type: String, default: '' },
       projects: { type: String, default: '' }
     },
-    atsScore: { type: Number, default: 0 },
+    atsScore: { type: Number, default: null },
     appliedCount: { type: Number, default: 0 },
     responseCount: { type: Number, default: 0 },
     interviewCount: { type: Number, default: 0 },

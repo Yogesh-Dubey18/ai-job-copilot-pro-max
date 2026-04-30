@@ -16,18 +16,18 @@ export default async function SettingsPage() {
     <AppShell>
       <div className="mx-auto min-h-screen max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <h1 className="text-4xl font-black tracking-tight">Settings</h1>
-        <p className="mt-2 text-slate-600">Production security and integration posture for your workspace.</p>
+        <p className="mt-2 text-slate-600">Manage your account, connected services, privacy, preferences, and job-search reminders.</p>
 
         <div className="mt-8 grid gap-4">
           <SecurityPanel />
           <GmailControls />
           <PrivacyControls />
           {[
-            ['Session security', 'Authenticated routes use an httpOnly cookie session through the Next.js BFF.'],
-            ['AI generation', 'Gemini calls stay server-side in the Express backend and return a safe fallback on failure.'],
-            ['Chrome extension', 'The extension includes an options screen so the backend URL can be changed without editing code.'],
-            ['Observability', 'Backend responses include request IDs and structured request logs for production debugging.'],
-            ['Testing and CI', 'GitHub Actions, typecheck, lint, unit tests, and builds are configured as repository quality gates.']
+            ['Account', 'Update your sign-in recovery details and keep your profile current.'],
+            ['Connected Services', 'Live job and email sync are not connected yet. You can still use curated jobs, manual import, and manual tracking.'],
+            ['AI Preferences', 'Choose how concise, detailed, or Hinglish-friendly your career assistant should be.'],
+            ['Notifications', 'Control follow-up reminders, interview alerts, and daily digest nudges.'],
+            ['Job Preferences', 'Keep target roles, locations, salary expectations, and workplace preferences up to date.']
           ].map(([title, body]) => (
             <section key={title} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="font-bold">{title}</h2>

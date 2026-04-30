@@ -7,6 +7,7 @@ import { scoreJob } from '../services/scoring.service';
 import { normalizeScrapedJob } from '../services/scraper.service';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
+import { isReadableResumeText, sanitizeResumeText } from '../utils/resumeText';
 
 const sampleJobs = [
   {
@@ -14,16 +15,16 @@ const sampleJobs = [
     company: 'Delhi Product Studio',
     location: 'Delhi Hybrid',
     description: 'Full stack developer role for React Next.js Node.js Express MongoDB TypeScript REST API projects. Open to fresher and junior candidates with strong portfolio work.',
-    url: 'https://careers.delhiproductstudio.example/jobs/full-stack-developer',
-    source: 'sample'
+    url: '',
+    source: 'curated'
   },
   {
     title: 'Full Stack Developer Intern',
     company: 'NCR SaaS Labs',
     location: 'Delhi Remote',
     description: 'Internship for full stack developer using JavaScript React Node.js MongoDB Git APIs and Tailwind. Fresher friendly role with mentor support.',
-    url: 'https://careers.ncrsaaslabs.example/jobs/full-stack-intern',
-    source: 'sample'
+    url: '',
+    source: 'curated'
   },
   {
     title: 'React Frontend Developer',
@@ -31,7 +32,7 @@ const sampleJobs = [
     location: 'Remote',
     description: 'React JavaScript REST API Tailwind Testing role for frontend fresher.',
     url: '',
-    source: 'sample'
+    source: 'curated'
   },
   {
     title: 'MERN Stack Intern',
@@ -39,7 +40,7 @@ const sampleJobs = [
     location: 'Bengaluru Hybrid',
     description: 'MongoDB Express React Node.js API Git internship with portfolio projects.',
     url: '',
-    source: 'sample'
+    source: 'curated'
   },
   {
     title: 'Next.js Developer',
@@ -47,7 +48,7 @@ const sampleJobs = [
     location: 'Remote',
     description: 'Next.js TypeScript React server rendering and testing role.',
     url: '',
-    source: 'sample'
+    source: 'curated'
   }
 ];
 
@@ -89,10 +90,19 @@ export const recommendedJobs = asyncHandler(async (req: any, res) => {
     await ensureSampleJobs();
     jobs = await Job.find().sort({ createdAt: -1 }).limit(20);
   }
-  const profileText = `${user?.profile?.skills?.join(' ') || ''} ${user?.profile?.resumeBaseText || ''}`;
+  const resumeText = sanitizeResumeText(user?.profile?.resumeBaseText || '');
+  const profileText = `${user?.profile?.skills?.join(' ') || ''} ${resumeText}`;
   const scored = jobs
-    .map((job) => ({ job, score: scoreJob(profileText, user?.profile?.resumeBaseText || '', job.description) }))
-    .sort((a, b) => b.score.finalScore - a.score.finalScore);
+    .map((job) => ({
+      job,
+      score: scoreJob(profileText, resumeText, job.description, {
+        targetRoles: user?.profile?.preferredRoles || [],
+        experienceLevel: user?.profile?.experienceLevel || '',
+        expectedSalary: user?.profile?.expectedSalary || 0,
+        job: job.toObject() as any
+      })
+    }))
+    .sort((a, b) => (b.score.finalScore ?? 0) - (a.score.finalScore ?? 0));
   res.json({ success: true, data: scored });
 });
 
@@ -100,7 +110,13 @@ export const analyzeJob = asyncHandler(async (req: any, res) => {
   const user = await User.findById(req.user.id);
   const job = await Job.findById(req.params.id);
   if (!job) throw new AppError('Job not found.', 404);
-  const data = scoreJob(`${user?.profile?.skills?.join(' ') || ''}`, user?.profile?.resumeBaseText || '', job.description);
+  const resumeText = sanitizeResumeText(user?.profile?.resumeBaseText || '');
+  const data = scoreJob(`${user?.profile?.skills?.join(' ') || ''}`, resumeText, job.description, {
+    targetRoles: user?.profile?.preferredRoles || [],
+    experienceLevel: user?.profile?.experienceLevel || '',
+    expectedSalary: user?.profile?.expectedSalary || 0,
+    job: job.toObject() as any
+  });
   res.json({ success: true, data });
 });
 
@@ -108,14 +124,20 @@ export const scoreJobEndpoint = asyncHandler(async (req: any, res) => {
   const user = await User.findById(req.user.id);
   const job = await Job.findById(req.params.id);
   if (!job) throw new AppError('Job not found.', 404);
-  const score = scoreJob(`${user?.profile?.skills?.join(' ') || ''}`, user?.profile?.resumeBaseText || '', job.description);
+  const resumeText = sanitizeResumeText(user?.profile?.resumeBaseText || '');
+  const score = scoreJob(`${user?.profile?.skills?.join(' ') || ''}`, resumeText, job.description, {
+    targetRoles: user?.profile?.preferredRoles || [],
+    experienceLevel: user?.profile?.experienceLevel || '',
+    expectedSalary: user?.profile?.expectedSalary || 0,
+    job: job.toObject() as any
+  });
   res.json({
     success: true,
     data: {
       ...score,
       applyDecision:
-        score.scamRiskScore >= 70 ? 'skip' : score.finalScore >= 85 ? 'apply_now' : score.finalScore >= 70 ? 'tailor_first' : score.finalScore >= 50 ? 'improve_first' : 'skip',
-      nextActions: [score.aiRecommendation, 'Use Manual Apply Mode after submitting on the original portal.']
+        score.profileIncomplete ? 'profile_incomplete' : score.scamRiskScore >= 70 ? 'skip' : (score.finalScore ?? 0) >= 85 ? 'apply_now' : (score.finalScore ?? 0) >= 70 ? 'tailor_first' : (score.finalScore ?? 0) >= 50 ? 'improve_first' : 'skip',
+      nextActions: score.nextActions || [score.aiRecommendation, 'Use Manual Apply Mode after submitting on the original portal.']
     }
   });
 });
@@ -208,7 +230,7 @@ export const dailyDigest = asyncHandler(async (req: any, res) => {
       resumeImprovements: ['Add measurable project impact', 'Keep reverse-chronological experience', 'Add truthful keywords from target roles'],
       notifications: [
         { type: 'daily_digest_ready', title: 'Daily digest ready', body: 'Review high-fit jobs and follow-ups due today.' },
-        { type: 'integration_issue', title: 'Integrations need setup', body: 'Add provider keys to unlock live job and email sync.' }
+        { type: 'integration_issue', title: 'Live sync not connected yet', body: 'You can still use curated jobs, manual import, and manual tracking.' }
       ],
       mission: ['Apply to 5 jobs', 'Improve ATS keywords', 'Practice 10 interview questions']
     }
@@ -238,7 +260,7 @@ export const notifications = asyncHandler(async (_req: any, res) => {
     data: [
       { _id: 'follow-up', title: 'Follow-up due', body: 'Review manually applied jobs and send one follow-up.', read: false },
       { _id: 'daily-digest', title: 'Daily digest ready', body: 'Check top matching jobs for today.', read: false },
-      { _id: 'integration-issue', title: 'Integration issue', body: 'Connect provider credentials to unlock live sync.', read: false }
+      { _id: 'integration-issue', title: 'Live sync not connected yet', body: 'You can still use curated jobs, manual import, and manual tracking.', read: false }
     ]
   });
 });
@@ -278,10 +300,16 @@ export const interviewPrep = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
-      companyBackground: 'Review the company website, product, customers, and recent hiring signals.',
-      possibleRounds: ['Resume screening', 'Technical interview', 'Project discussion', 'HR round'],
-      technicalQuestions: ['Explain React hooks.', 'How do you handle API loading states?', 'Walk through your best project.'],
-      hrQuestions: ['Tell me about yourself.', 'Why this role?', 'What are your salary expectations?'],
+      readinessScore: 72,
+      likelyRounds: ['Resume Screening', 'Technical Round', 'Project Discussion', 'HR Round'],
+      technicalTopics: ['JavaScript', 'React', 'Node.js', 'MongoDB', 'API integration', 'DSA basics'],
+      projectQuestions: ['Explain your strongest full-stack project.', 'How did you handle API errors?', 'What would you improve in your architecture?'],
+      hrQuestions: ['Tell me about yourself.', 'Why this company?', 'What are your salary and joining expectations?'],
+      companyResearch: 'Review the company website, product, customers, recent hiring signals, and official career page before the interview.',
+      weakAreas: ['Add measurable project impact', 'Practice concise system explanation'],
+      dailyPrepPlan: ['Day 1: Resume and project stories', 'Day 2: Technical fundamentals', 'Day 3: Mock interview and HR answers'],
+      mockInterviewQuestions: ['Walk me through your resume.', 'Explain React hooks with an example.', 'Design a simple application tracker API.'],
+      nextActions: ['Select one application', 'Practice one mock round', 'Save feedback to the application timeline'],
       preparationPlan: ['Revise role basics', 'Prepare project stories', 'Practice concise answers']
     }
   });
@@ -296,7 +324,9 @@ export const generatePortfolio = asyncHandler(async (req: any, res) => {
       userId: req.user.id,
       username,
       headline: `${user?.profile?.preferredRoles?.[0] || 'Full Stack Developer'} Portfolio`,
-      summary: user?.profile?.resumeBaseText || 'AI-generated portfolio summary ready for editing.',
+      summary: isReadableResumeText(user?.profile?.resumeBaseText || '')
+        ? sanitizeResumeText(user?.profile?.resumeBaseText || '').slice(0, 1200)
+        : 'Add a short professional summary before publishing your portfolio.',
       skills: user?.profile?.skills || [],
       projects: [{ name: 'Featured Project', description: 'Add your strongest project outcome here.', url: '' }],
       published: true

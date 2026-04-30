@@ -44,9 +44,9 @@ export function GmailControls() {
         <button disabled={pending} onClick={() => post('/api/gmail/disconnect')} className="rounded-md border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 disabled:opacity-60">Disconnect and delete synced data</button>
       </div>
       <p className="mt-3 text-sm text-slate-600">
-        Gmail integration: {state.connected ? 'Connected' : 'Not connected'} - {state.fallback ? 'Add OAuth credentials to enable live sync' : 'OAuth ready'}
+        Gmail integration: {state.connected ? 'Connected' : 'Not connected'} - {state.fallback ? 'Live sync is not connected yet. Manual tracking still works.' : 'Ready to sync'}
       </p>
-      {state.setupRequired?.length ? <p className="mt-2 text-sm text-amber-700">Needs: {state.setupRequired.join(', ')}</p> : null}
+      {state.setupRequired?.length ? <p className="mt-2 text-sm text-amber-700">Ask the admin to finish Gmail setup before using live email sync.</p> : null}
       {message ? <p className="mt-3 rounded-md bg-slate-50 p-3 text-sm">{message}</p> : null}
     </section>
   );

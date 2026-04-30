@@ -21,27 +21,15 @@ export async function createApplication(formData: FormData) {
       title,
       company,
       status,
-      matchScore: Number.isFinite(matchScore) ? matchScore : undefined
+      matchScore: Number.isFinite(matchScore) ? matchScore : undefined,
+      appliedDate: String(formData.get('appliedDate') || '') || undefined,
+      followUpDate: String(formData.get('followUpDate') || '') || undefined,
+      resumeVersionUsed: String(formData.get('resumeVersionUsed') || '') || undefined,
+      recruiterEmail: String(formData.get('recruiterContact') || '') || undefined,
+      sourcePlatform: String(formData.get('sourcePlatform') || '') || undefined,
+      notes: String(formData.get('notes') || '') || undefined
     })
   });
-
-  revalidatePath('/dashboard');
-  revalidatePath('/applications');
-}
-
-export async function createDemoApplications() {
-  const demos = [
-    { title: 'Frontend Engineer', company: 'Acme AI Labs', status: 'saved', matchScore: 92 },
-    { title: 'Full-Stack Developer', company: 'Orbit Cloud', status: 'applied', matchScore: 87 },
-    { title: 'React Engineer', company: 'Nova Systems', status: 'interview_round_1', matchScore: 94 }
-  ];
-
-  for (const demo of demos) {
-    await backendFetch('/api/applications', {
-      method: 'POST',
-      body: JSON.stringify(demo)
-    });
-  }
 
   revalidatePath('/dashboard');
   revalidatePath('/applications');

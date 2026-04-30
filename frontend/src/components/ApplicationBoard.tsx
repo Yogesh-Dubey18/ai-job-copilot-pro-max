@@ -3,7 +3,6 @@
 import { useTransition } from 'react';
 import {
   createApplication,
-  createDemoApplications,
   updateApplicationStatus
 } from '@/app/actions/update-application-status';
 import { Application, ApplicationStatus } from '@/types';
@@ -36,19 +35,11 @@ export function ApplicationBoard({ applications }: { applications: Application[]
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold">Add Application</h2>
-            <p className="text-sm text-slate-500">Create real pipeline data for your dashboard counters.</p>
+            <p className="text-sm text-slate-500">Track a job you applied to manually and keep follow-ups organized.</p>
           </div>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => startTransition(() => createDemoApplications())}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100 disabled:opacity-50"
-          >
-            Add sample pipeline
-          </button>
         </div>
 
-        <form action={createApplication} className="grid gap-3 md:grid-cols-[1fr_1fr_160px_130px_auto]">
+        <form action={createApplication} className="grid gap-3 md:grid-cols-2">
           <input
             name="title"
             placeholder="Role title"
@@ -61,7 +52,9 @@ export function ApplicationBoard({ applications }: { applications: Application[]
             className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950"
             required
           />
-          <select name="status" defaultValue="saved" className="rounded-md border border-slate-300 px-3 py-2 text-sm">
+          <input name="sourcePlatform" placeholder="Source platform" className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
+          <input name="jobUrl" placeholder="Job URL" className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
+          <select name="status" defaultValue="manually_applied" className="rounded-md border border-slate-300 px-3 py-2 text-sm">
             {statuses.map((status) => (
               <option key={status} value={status}>
                 {status}
@@ -76,8 +69,14 @@ export function ApplicationBoard({ applications }: { applications: Application[]
             placeholder="Match %"
             className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950"
           />
+          <input name="resumeVersionUsed" placeholder="Resume version used" className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
+          <input name="appliedDate" type="date" className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
+          <input name="followUpDate" type="date" className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
+          <input name="recruiterName" placeholder="Recruiter name" className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
+          <input name="recruiterContact" placeholder="Recruiter email or LinkedIn" className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
+          <textarea name="notes" placeholder="Notes" className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950 md:col-span-2" />
           <button type="submit" className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
-            Add
+            Add Manual Application
           </button>
         </form>
       </section>
@@ -93,7 +92,7 @@ export function ApplicationBoard({ applications }: { applications: Application[]
 
         {applications.length === 0 ? (
           <div className="p-8 text-center text-slate-500">
-            No applications yet. Add one above or create a sample pipeline to see the dashboard working.
+            No applications yet. Add a manual application above or save a job from Job Discovery.
           </div>
         ) : (
           applications.map((application) => (
@@ -121,6 +120,16 @@ export function ApplicationBoard({ applications }: { applications: Application[]
                   ))}
                 </select>
               </span>
+              <div className="col-span-12 grid gap-2 rounded-md bg-slate-50 p-3 text-xs text-slate-600 sm:grid-cols-4">
+                <span>Source: {application.portalSource || 'Manual Import'}</span>
+                <span>Applied: {application.appliedDate ? new Date(application.appliedDate).toLocaleDateString() : 'Not set'}</span>
+                <span>Follow-up: {application.followUpDate ? new Date(application.followUpDate).toLocaleDateString() : 'Not set'}</span>
+                <span>Resume: {application.resumeVersionUsed || 'Not linked'}</span>
+                <span>Recruiter: {application.recruiterContact || 'Not added'}</span>
+                <a href={`/applications/${application._id}`} className="font-semibold text-slate-950">View Timeline</a>
+                <a href={`/company-reply?applicationId=${application._id}`} className="font-semibold text-slate-950">Generate Reply</a>
+                <a href={`/interview/${application._id}`} className="font-semibold text-slate-950">Prepare Interview</a>
+              </div>
             </div>
           ))
         )}

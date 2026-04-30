@@ -4,6 +4,16 @@ import { motion } from 'framer-motion';
 import { ApplicationStats } from '@/types';
 
 export function BentoGrid({ stats }: { stats: ApplicationStats }) {
+  const nextStep =
+    stats.total === 0 && stats.saved === 0
+      ? 'Upload your resume, set a target role, then find the first high-fit jobs to track.'
+      : stats.saved > 0
+        ? 'Generate Application Kits for saved jobs with high keyword fit, then move strong targets into applied status.'
+        : stats.interviews > 0
+          ? 'Prepare interview stories, role-specific examples, and follow-up reminders for active interviews.'
+          : stats.applied > 0
+            ? 'Review follow-up dates and prepare company replies for any recruiter messages.'
+            : 'Find jobs that match your resume and track the applications you submit.';
   return (
     <div className="grid auto-rows-[150px] grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
       <motion.div
@@ -16,7 +26,11 @@ export function BentoGrid({ stats }: { stats: ApplicationStats }) {
           <p className="mt-2 text-6xl font-black">{stats.interviews}</p>
         </div>
         <div className="rounded-lg bg-white/10 p-4 backdrop-blur">
-          <p className="text-sm text-slate-200">Pipeline velocity is strong. Prepare focused stories and role-specific examples.</p>
+          <p className="text-sm text-slate-200">
+            {stats.interviews > 0
+              ? 'Prepare focused stories and role-specific examples for your active interviews.'
+              : 'No active interviews yet. Track applications and follow-ups to build momentum.'}
+          </p>
         </div>
       </motion.div>
 
@@ -61,11 +75,11 @@ export function BentoGrid({ stats }: { stats: ApplicationStats }) {
           <h3 className="font-semibold">Next-Step Suggestion</h3>
         </div>
         <p className="text-teal-50">
-          Generate Application Kits for saved jobs with high keyword fit, then move strong targets into applied status.
+          {nextStep}
         </p>
-        <button className="mt-4 rounded-md bg-white px-4 py-2 font-medium text-teal-900 transition hover:bg-teal-50">
+        <a href={stats.saved > 0 ? '/assistant' : stats.total ? '/applications' : '/resume/upload'} className="mt-4 inline-flex rounded-md bg-white px-4 py-2 font-medium text-teal-900 transition hover:bg-teal-50">
           Generate Application Kit
-        </button>
+        </a>
       </motion.div>
     </div>
   );

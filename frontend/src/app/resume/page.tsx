@@ -28,17 +28,27 @@ export default async function ResumePage() {
               <article key={resume._id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between gap-4">
                   <h2 className="text-xl font-bold">{resume.title}</h2>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold">ATS {resume.atsScore}</span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold">
+                    {resume.atsScore === null ? 'ATS needs text' : `ATS ${resume.atsScore}`}
+                  </span>
                 </div>
-                <p className="mt-3 line-clamp-3 text-sm text-slate-600">{resume.parsedText}</p>
+                <p className="mt-3 line-clamp-3 text-sm text-slate-600">
+                  {resume.extractionStatus === 'needs_manual_text'
+                    ? 'Readable resume text could not be extracted. Paste clean resume text manually.'
+                    : resume.parsedText}
+                </p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <div className="rounded-md bg-slate-50 p-3">
                     <p className="text-sm font-semibold">Parsed preview</p>
-                    <p className="mt-1 line-clamp-4 text-sm text-slate-600">{resume.sections?.summary || resume.parsedText}</p>
+                    <p className="mt-1 line-clamp-4 text-sm text-slate-600">
+                      {resume.extractionStatus === 'needs_manual_text'
+                        ? 'Manual text needed before preview is available.'
+                        : resume.sections?.summary || resume.parsedText}
+                    </p>
                   </div>
                   <div className="rounded-md bg-slate-50 p-3">
                     <p className="text-sm font-semibold">Detected skills</p>
-                    <p className="mt-1 text-sm text-slate-600">{resume.sections?.skills?.join(', ') || 'Add more resume text to detect skills.'}</p>
+                    <p className="mt-1 text-sm text-slate-600">{resume.detectedSkills?.join(', ') || resume.sections?.skills?.join(', ') || 'Add clean resume text to detect skills.'}</p>
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-500">

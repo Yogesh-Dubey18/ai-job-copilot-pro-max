@@ -9,7 +9,9 @@
     "start": "node dist/server.js",
     "test": "vitest run",
     "seed:admin": "tsx src/scripts/seedAdmin.ts",
-    "seed:demo": "tsx src/scripts/seedDemo.ts"
+    "seed:demo": "tsx src/scripts/seedDemo.ts",
+    "cleanup:resumes": "tsx src/scripts/cleanupResumes.ts",
+    "cleanup:profiles": "tsx src/scripts/cleanupProfiles.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

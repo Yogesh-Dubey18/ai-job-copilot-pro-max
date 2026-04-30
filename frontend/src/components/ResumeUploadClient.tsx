@@ -52,7 +52,11 @@ export function ResumeUploadClient() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.message || 'Resume upload failed.');
-      setMessage(`Resume saved. ATS score: ${payload.data?.atsScore ?? 0}.`);
+      setMessage(
+        payload.data?.extractionStatus === 'needs_manual_text'
+          ? 'Readable resume text could not be extracted. Paste clean resume text manually.'
+          : `Resume saved. ATS score: ${payload.data?.atsScore ?? 'not available yet'}.`
+      );
       formElement.reset();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Upload failed.');
