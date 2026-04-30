@@ -116,6 +116,8 @@ router.post('/jobs/:id/score', protect, scoreJobEndpoint);
 router.get('/applications', protect, listApplications);
 router.post('/applications', protect, createApplication);
 router.post('/applications/manual-apply', protect, manualApply);
+router.get('/applications/stats', protect, applicationStats);
+router.get('/applications/analytics', protect, applicationAnalytics);
 router.get('/applications/:id', protect, getApplication);
 router.patch('/applications/:id/status', protect, updateApplicationStatus);
 router.post('/applications/:id/timeline', protect, addApplicationTimeline);
@@ -123,8 +125,6 @@ router.post('/applications/:id/follow-up', protect, setFollowUp);
 router.post('/applications/:id/response', protect, generateCompanyResponse);
 router.get('/applications/:id/replies', protect, listCompanyResponses);
 router.post('/applications/:id/replies', protect, generateCompanyResponse);
-router.get('/applications/stats', protect, applicationStats);
-router.get('/applications/analytics', protect, applicationAnalytics);
 
 router.get('/admin/overview', protect, requireAdmin, adminOverview);
 router.post('/admin/jobs/sync', protect, requireAdmin, syncJobs);

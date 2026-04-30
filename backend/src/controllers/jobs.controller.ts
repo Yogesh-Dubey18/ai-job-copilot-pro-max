@@ -5,6 +5,8 @@ import { normalizeScrapedJob } from '../services/scraper.service';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const jobSchema = z.object({
   title: z.string().min(1),
   company: z.string().min(1),
@@ -63,7 +65,38 @@ const responseSchema = z.object({
 });
 
 export const listJobs = asyncHandler(async (req, res) => {
-  const query: Record<string, any> = {};
+  if ((await Job.countDocuments()) === 0) {
+    await Promise.all(
+      [
+        {
+          title: 'Full Stack Developer',
+          company: 'Delhi Product Studio',
+          location: 'Delhi Hybrid',
+          description:
+            'Full stack developer role for React Next.js Node.js Express MongoDB TypeScript REST API projects. Open to fresher and junior candidates with strong portfolio work.',
+          source: 'sample'
+        },
+        {
+          title: 'Full Stack Developer Intern',
+          company: 'NCR SaaS Labs',
+          location: 'Delhi Remote',
+          description:
+            'Internship for full stack developer using JavaScript React Node.js MongoDB Git APIs and Tailwind. Fresher friendly role with mentor support.',
+          source: 'sample'
+        }
+      ].map((sample) => {
+        const normalized = normalizeScrapedJob(sample);
+        const sourceJobId = `${normalized.title}-${normalized.company}-${normalized.location}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        return Job.findOneAndUpdate(
+          { source: normalized.source, sourceJobId },
+          { ...normalized, sourceJobId, postedAt: new Date() },
+          { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+      })
+    );
+  }
+
+  const clauses: Record<string, any>[] = [];
   const search = String(req.query.role || req.query.q || '').trim();
   const location = String(req.query.location || '').trim();
   const source = String(req.query.source || '').trim();
@@ -72,15 +105,25 @@ export const listJobs = asyncHandler(async (req, res) => {
   const internship = String(req.query.internship || '').trim() === 'true';
   const postedToday = String(req.query.postedToday || '').trim() === 'true';
 
-  if (search) query.$text = { $search: search };
-  if (location) query.location = new RegExp(location, 'i');
-  if (source) query.source = source;
-  if (remote === 'true') query.remote = true;
-  if (remote === 'false') query.remote = false;
-  if (fresher) query.description = new RegExp('fresher|entry|junior|0-1|0 to 1', 'i');
-  if (internship) query.title = new RegExp('intern|internship', 'i');
-  if (postedToday) query.createdAt = { $gte: new Date(new Date().setHours(0, 0, 0, 0)) };
+  if (search) {
+    const terms = search.split(/\s+/).filter(Boolean).map(escapeRegex).join('|');
+    const searchRegex = new RegExp(terms, 'i');
+    clauses.push({
+      $or: [{ title: searchRegex }, { company: searchRegex }, { description: searchRegex }, { skills: searchRegex }]
+    });
+  }
+  if (location) clauses.push({ location: new RegExp(escapeRegex(location), 'i') });
+  if (source) clauses.push({ source });
+  if (remote === 'true') clauses.push({ remote: true });
+  if (remote === 'false') clauses.push({ remote: false });
+  if (fresher) clauses.push({ description: new RegExp('fresher|entry|junior|0-1|0 to 1', 'i') });
+  if (internship) clauses.push({ $or: [{ title: new RegExp('intern|internship', 'i') }, { description: new RegExp('intern|internship', 'i') }] });
+  if (postedToday) {
+    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+    clauses.push({ $or: [{ postedAt: { $gte: startOfDay } }, { createdAt: { $gte: startOfDay } }] });
+  }
 
+  const query = clauses.length ? { $and: clauses } : {};
   const jobs = await Job.find(query).sort({ createdAt: -1 }).limit(100);
   res.json({ success: true, data: jobs });
 });
@@ -330,7 +373,7 @@ export const applicationAnalytics = asyncHandler(async (req: any, res) => {
       offerRate: total ? Math.round((offers / total) * 100) : 0,
       avgMatchScore,
       bestResumeVersion: applications.find((item) => item.resumeVersionUsed)?.resumeVersionUsed || 'Base resume',
-      bestJobSource: 'demo/manual',
+      bestJobSource: 'curated/manual',
       recentCompanies: applications.slice(0, 8).map((item) => item.company)
     }
   });

@@ -10,6 +10,7 @@ export const gmailStatus = asyncHandler(async (req: any, res) => {
     data: {
       connected: Boolean(account?.connected),
       lastSyncAt: account?.lastSyncAt,
+      mode: missingCredentials ? 'fallback' : 'oauth',
       fallback: missingCredentials,
       setupRequired: missingCredentials ? ['GMAIL_CLIENT_ID', 'GMAIL_CLIENT_SECRET', 'GMAIL_REDIRECT_URI'] : []
     }

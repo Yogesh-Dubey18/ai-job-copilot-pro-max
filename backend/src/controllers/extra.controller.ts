@@ -10,6 +10,22 @@ import { asyncHandler } from '../utils/asyncHandler';
 
 const sampleJobs = [
   {
+    title: 'Full Stack Developer',
+    company: 'Delhi Product Studio',
+    location: 'Delhi Hybrid',
+    description: 'Full stack developer role for React Next.js Node.js Express MongoDB TypeScript REST API projects. Open to fresher and junior candidates with strong portfolio work.',
+    url: 'https://careers.delhiproductstudio.example/jobs/full-stack-developer',
+    source: 'sample'
+  },
+  {
+    title: 'Full Stack Developer Intern',
+    company: 'NCR SaaS Labs',
+    location: 'Delhi Remote',
+    description: 'Internship for full stack developer using JavaScript React Node.js MongoDB Git APIs and Tailwind. Fresher friendly role with mentor support.',
+    url: 'https://careers.ncrsaaslabs.example/jobs/full-stack-intern',
+    source: 'sample'
+  },
+  {
     title: 'React Frontend Developer',
     company: 'ABC Tech',
     location: 'Remote',
@@ -35,26 +51,32 @@ const sampleJobs = [
   }
 ];
 
-export const fetchDailyJobs = asyncHandler(async (_req, res) => {
+const ensureSampleJobs = async () => {
   const jobs = [];
   for (const sample of sampleJobs) {
     const normalized = normalizeScrapedJob(sample);
+    const sourceJobId =
+      normalized.sourceJobId ||
+      `${normalized.title}-${normalized.company}-${normalized.location}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const job = await Job.findOneAndUpdate(
-      { source: normalized.source, sourceJobId: normalized.sourceJobId || normalized.url },
-      normalized,
+      { source: normalized.source, sourceJobId },
+      { ...normalized, sourceJobId, postedAt: new Date() },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
     jobs.push(job);
   }
+  return jobs;
+};
+
+export const fetchDailyJobs = asyncHandler(async (_req, res) => {
+  const jobs = await ensureSampleJobs();
   res.json({ success: true, data: jobs });
 });
 
 export const todayJobs = asyncHandler(async (_req, res) => {
   let jobs = await Job.find().sort({ createdAt: -1 }).limit(20);
   if (jobs.length === 0) {
-    for (const sample of sampleJobs) {
-      await Job.create(normalizeScrapedJob(sample));
-    }
+    await ensureSampleJobs();
     jobs = await Job.find().sort({ createdAt: -1 }).limit(20);
   }
   res.json({ success: true, data: jobs });
@@ -62,7 +84,11 @@ export const todayJobs = asyncHandler(async (_req, res) => {
 
 export const recommendedJobs = asyncHandler(async (req: any, res) => {
   const user = await User.findById(req.user.id);
-  const jobs = await Job.find().sort({ createdAt: -1 }).limit(20);
+  let jobs = await Job.find().sort({ createdAt: -1 }).limit(20);
+  if (jobs.length === 0) {
+    await ensureSampleJobs();
+    jobs = await Job.find().sort({ createdAt: -1 }).limit(20);
+  }
   const profileText = `${user?.profile?.skills?.join(' ') || ''} ${user?.profile?.resumeBaseText || ''}`;
   const scored = jobs
     .map((job) => ({ job, score: scoreJob(profileText, user?.profile?.resumeBaseText || '', job.description) }))
@@ -128,11 +154,16 @@ export const saveJob = asyncHandler(async (req: any, res) => {
 });
 
 export const importUrl = asyncHandler(async (req, res) => {
-  const schema = z.object({ url: z.string().url(), title: z.string().optional(), company: z.string().optional(), description: z.string().optional() });
+  const schema = z.object({
+    url: z.string().url().or(z.literal('')).optional(),
+    title: z.string().optional(),
+    company: z.string().optional(),
+    description: z.string().optional()
+  });
   const data = schema.parse(req.body);
   const job = await Job.create(
     normalizeScrapedJob({
-      url: data.url,
+      url: data.url || '',
       title: data.title || 'Imported Job',
       company: data.company || 'Imported Company',
       description: data.description || `User imported job from ${data.url}`,
@@ -143,6 +174,9 @@ export const importUrl = asyncHandler(async (req, res) => {
 });
 
 export const dailyDigest = asyncHandler(async (req: any, res) => {
+  if ((await Job.countDocuments()) === 0) {
+    await ensureSampleJobs();
+  }
   const [jobs, highMatch, followUps, interviews] = await Promise.all([
     Job.countDocuments(),
     Job.find().limit(5),

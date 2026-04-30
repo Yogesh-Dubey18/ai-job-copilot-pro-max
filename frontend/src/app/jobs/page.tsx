@@ -40,8 +40,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
               </select>
               <select name="source" defaultValue={params.source || ''} className="rounded-md border border-slate-200 px-3 py-2 text-sm">
                 <option value="">Any source</option>
-                <option value="demo">Curated fallback</option>
-                <option value="sample">Curated sample</option>
+                <option value="sample">Curated fallback</option>
                 <option value="manual-url">Manual URL</option>
                 <option value="chrome-extension">Chrome Extension</option>
               </select>
