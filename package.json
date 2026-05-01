@@ -14,6 +14,8 @@
     "dev:frontend": "npm run dev --workspace frontend",
     "build:backend": "npm run build --workspace backend",
     "build:frontend": "npm run build --workspace frontend",
+    "test": "npm test --workspace backend && npm test --workspace frontend",
+    "seed": "npm run seed --workspace backend",
     "typecheck": "npm run build --workspace backend && npm run build --workspace frontend",
     "cleanup:resumes": "npm run cleanup:resumes --workspace backend",
     "cleanup:profiles": "npm run cleanup:profiles --workspace backend",

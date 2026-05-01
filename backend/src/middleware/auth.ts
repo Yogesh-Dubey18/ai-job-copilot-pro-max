@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-import User from '../models/User';
+import User, { normalizeUserRole } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 
@@ -10,7 +10,7 @@ export interface AuthRequest extends Request {
     id: string;
     name: string;
     email: string;
-    role: string;
+    role: 'job_seeker' | 'employer' | 'admin';
   };
 }
 
@@ -33,7 +33,7 @@ export const protect = asyncHandler(async (req: AuthRequest, _res: Response, nex
     id: user._id.toString(),
     name: user.name,
     email: user.email,
-    role: user.role
+    role: normalizeUserRole(user.role)
   };
 
   next();
@@ -45,4 +45,14 @@ export const requireAdmin = (req: AuthRequest, _res: Response, next: NextFunctio
   }
 
   return next();
+};
+
+export const requireRole = (...roles: Array<'job_seeker' | 'employer' | 'admin'>) => {
+  return (req: AuthRequest, _res: Response, next: NextFunction) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return next(new AppError('You do not have permission to access this resource.', 403));
+    }
+
+    return next();
+  };
 };

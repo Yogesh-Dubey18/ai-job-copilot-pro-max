@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import fs from 'fs/promises';
 import Job from '../models/Job';
 import Resume from '../models/Resume';
 import User from '../models/User';
-import { buildResumeExport, parseResumeFile } from '../services/resumeFile.service';
+import { buildResumeExport, parseResumeFile, resumeUploadSizeBytes, safeResumeFileName, validateResumeUpload } from '../services/resumeFile.service';
 import { extractSkills, scoreJob } from '../services/scoring.service';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -11,6 +12,7 @@ import { isReadableResumeText, sanitizeResumeText } from '../utils/resumeText';
 const uploadSchema = z.object({
   title: z.string().optional(),
   fileName: z.string().optional(),
+  originalName: z.string().optional(),
   mimeType: z.string().optional(),
   fileBase64: z.string().optional(),
   parsedText: z.string().optional()
@@ -34,22 +36,73 @@ const splitSections = (text: string) => {
   };
 };
 
+const buildResumeSuggestions = (text: string, detectedSkills: string[]) => {
+  const weakSections = [
+    !/summary|profile/i.test(text) ? 'Add a concise professional summary near the top.' : '',
+    !/projects?/i.test(text) ? 'Add project bullets with technologies, scope, and measurable outcomes.' : '',
+    !/experience|intern/i.test(text) ? 'Add experience, internship, freelance, or academic project evidence.' : '',
+    !/\d+%|\d+x|reduced|improved|launched|built/i.test(text) ? 'Add quantified impact statements to your strongest bullets.' : ''
+  ].filter(Boolean);
+
+  return {
+    missingSkills: detectedSkills.length >= 5 ? [] : ['Add 5-8 truthful role-specific technical skills.'],
+    weakSections,
+    atsTips: [
+      'Use reverse chronological sections with clear headings.',
+      'Avoid tables, graphics, columns, and icons that confuse ATS parsers.',
+      'Mirror important job keywords naturally where they match your real experience.'
+    ],
+    keywordImprovements: detectedSkills.slice(0, 8),
+    summaryImprovement:
+      'Open with your target role, core stack, strongest project or experience proof, and the business outcome you can deliver.',
+    projectBulletImprovements: [
+      'Rewrite project bullets as Action + Technology + Result.',
+      'Mention scale, users, latency, accuracy, automation, or time saved wherever truthful.'
+    ]
+  };
+};
+
 export const uploadResume = asyncHandler(async (req: any, res) => {
   const data = uploadSchema.parse(req.body);
   const mimeType = data.mimeType || 'text/plain';
-  const parsedText = sanitizeResumeText(await parseResumeFile(mimeType, data.fileBase64, data.parsedText));
+  const defaultName = mimeType === 'application/pdf'
+    ? 'resume.pdf'
+    : mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ? 'resume.docx'
+      : mimeType === 'application/msword'
+        ? 'resume.doc'
+        : 'resume.txt';
+  const originalName = data.originalName || data.fileName || defaultName;
+  const fileName = safeResumeFileName(data.fileName || originalName);
+  validateResumeUpload(mimeType, data.fileBase64, fileName);
+  const parsedText = sanitizeResumeText(await parseResumeFile(mimeType, data.fileBase64, data.parsedText, fileName));
   const readable = isReadableResumeText(parsedText);
   const detectedSkills = readable ? extractSkills(parsedText) : [];
   const atsScore = readable ? Math.min(100, Math.max(35, Math.round(parsedText.length / 35))) : null;
+  const aiSuggestions = readable ? buildResumeSuggestions(parsedText, detectedSkills) : {
+    missingSkills: [],
+    weakSections: ['Readable resume text could not be extracted.'],
+    atsTips: ['Paste clean resume text manually to enable ATS analysis.'],
+    keywordImprovements: [],
+    summaryImprovement: '',
+    projectBulletImprovements: []
+  };
   const resume = await Resume.create({
     userId: req.user.id,
     title: data.title || 'Base Resume',
-    fileName: data.fileName || '',
+    fileName,
+    filename: fileName,
+    originalName,
+    size: resumeUploadSizeBytes(data.fileBase64, data.parsedText),
     mimeType,
     parsedText: readable ? parsedText : '',
+    extractedText: readable ? parsedText : '',
     manualText: data.parsedText ? sanitizeResumeText(data.parsedText) : '',
     sections: readable ? splitSections(parsedText) : splitSections(''),
     atsScore,
+    aiScore: atsScore,
+    aiSuggestions,
+    scoreHistory: atsScore === null ? [] : [{ score: atsScore, suggestions: aiSuggestions }],
     detectedSkills,
     extractionStatus: readable ? 'parsed' : 'needs_manual_text'
   });
@@ -161,6 +214,73 @@ export const atsCheck = asyncHandler(async (req: any, res) => {
   });
 });
 
+export const analyzeResume = asyncHandler(async (req: any, res) => {
+  const resume = await Resume.findOne({ _id: req.params.id, userId: req.user.id });
+  if (!resume) throw new AppError('Resume not found.', 404);
+
+  const resumeText = sanitizeResumeText(resume.parsedText || resume.manualText || resume.extractedText || '');
+  if (!isReadableResumeText(resumeText)) {
+    resume.parsedText = '';
+    resume.extractedText = '';
+    resume.detectedSkills = [];
+    resume.atsScore = null;
+    resume.aiScore = null;
+    resume.extractionStatus = 'needs_manual_text';
+    resume.aiSuggestions = {
+      missingSkills: [],
+      weakSections: ['Automatic extraction did not produce readable resume text.'],
+      atsTips: ['Paste clean resume text manually to run AI resume analysis.'],
+      keywordImprovements: [],
+      summaryImprovement: '',
+      projectBulletImprovements: []
+    };
+    await resume.save();
+
+    return res.json({
+      success: true,
+      message: 'Readable resume text could not be extracted. Paste clean resume text manually.',
+      data: {
+        aiScore: null,
+        extractionStatus: 'needs_manual_text',
+        aiSuggestions: resume.aiSuggestions
+      }
+    });
+  }
+
+  const detectedSkills = extractSkills(resumeText);
+  const contactScore = /@|linkedin|github|phone|\+91/i.test(resumeText) ? 15 : 6;
+  const sectionScore = ['summary', 'experience', 'education', 'projects'].reduce(
+    (total, section) => total + (new RegExp(section, 'i').test(resumeText) ? 12 : 4),
+    0
+  );
+  const skillsScore = Math.min(20, detectedSkills.length * 3);
+  const impactScore = /\d+%|\d+x|reduced|improved|launched|built/i.test(resumeText) ? 17 : 8;
+  const aiScore = Math.min(100, Math.max(35, contactScore + sectionScore + skillsScore + impactScore));
+  const aiSuggestions = buildResumeSuggestions(resumeText, detectedSkills);
+
+  resume.parsedText = resumeText;
+  resume.extractedText = resumeText;
+  resume.detectedSkills = detectedSkills;
+  resume.sections = splitSections(resumeText);
+  resume.atsScore = aiScore;
+  resume.aiScore = aiScore;
+  resume.aiSuggestions = aiSuggestions;
+  resume.extractionStatus = resume.manualText ? 'manual_text' : 'parsed';
+  resume.scoreHistory.push({ score: aiScore, suggestions: aiSuggestions });
+  await resume.save();
+
+  res.json({
+    success: true,
+    message: 'Resume analysis completed',
+    data: {
+      aiScore,
+      detectedSkills,
+      aiSuggestions,
+      scoreHistory: resume.scoreHistory
+    }
+  });
+});
+
 export const tailorResume = asyncHandler(async (req: any, res) => {
   const resume = await Resume.findOne({ _id: req.params.id, userId: req.user.id });
   if (!resume) throw new AppError('Resume not found.', 404);
@@ -193,6 +313,9 @@ export const resumeVersions = asyncHandler(async (req: any, res) => {
 export const deleteResume = asyncHandler(async (req: any, res) => {
   const resume = await Resume.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
   if (!resume) throw new AppError('Resume not found.', 404);
+  if (resume.localPath) {
+    await fs.unlink(resume.localPath).catch(() => undefined);
+  }
   res.json({ success: true, data: { deleted: true } });
 });
 

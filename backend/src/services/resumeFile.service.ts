@@ -1,24 +1,60 @@
 import { Buffer } from 'buffer';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import PDFDocument from 'pdfkit';
+import { env } from '../config/env';
 import { AppError } from '../utils/AppError';
 import { isReadableResumeText, sanitizeResumeText } from '../utils/resumeText';
 
-const allowedMimeTypes = new Set([
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/msword',
-  'text/plain'
-]);
+const allowedExtensionsByMime: Record<string, string[]> = {
+  'application/pdf': ['.pdf'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'application/msword': ['.doc'],
+  'text/plain': ['.txt']
+};
 
-export const parseResumeFile = async (mimeType: string, fileBase64 = '', fallbackText = '') => {
+const allowedMimeTypes = new Set(Object.keys(allowedExtensionsByMime));
+
+export const resumeUploadSizeBytes = (fileBase64 = '', fallbackText = '') => {
+  if (fileBase64) return Math.ceil((fileBase64.length * 3) / 4);
+  return Buffer.byteLength(fallbackText || '', 'utf8');
+};
+
+export const safeResumeFileName = (fileName = 'resume.txt') => {
+  const sanitized = fileName
+    .replace(/[/\\?%*:|"<>]/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 120)
+    .replace(/^-|-$/g, '');
+
+  return sanitized || 'resume.txt';
+};
+
+export const validateResumeUpload = (mimeType: string, fileBase64 = '', fileName = '') => {
+  if (!allowedMimeTypes.has(mimeType)) {
+    throw new AppError('Only PDF, DOC, DOCX, or TXT resumes are supported.', 400);
+  }
+
+  if (fileName) {
+    const normalizedName = safeResumeFileName(fileName).toLowerCase();
+    const allowedExtensions = allowedExtensionsByMime[mimeType] || [];
+    if (!allowedExtensions.some((extension) => normalizedName.endsWith(extension))) {
+      throw new AppError('Resume file extension does not match the uploaded file type.', 400);
+    }
+  }
+
+  const sizeBytes = resumeUploadSizeBytes(fileBase64);
+  const maxBytes = env.MAX_FILE_SIZE_MB * 1024 * 1024;
+  if (fileBase64 && sizeBytes > maxBytes) {
+    throw new AppError(`Resume upload must be ${env.MAX_FILE_SIZE_MB}MB or smaller.`, 413);
+  }
+};
+
+export const parseResumeFile = async (mimeType: string, fileBase64 = '', fallbackText = '', fileName = '') => {
   const manualText = sanitizeResumeText(fallbackText);
   if (manualText) return manualText;
   if (!fileBase64) throw new AppError('Resume text or file content is required.', 400);
-  if (!allowedMimeTypes.has(mimeType)) throw new AppError('Only PDF, DOC, DOCX, or TXT resumes are supported.', 400);
-
-  const sizeBytes = Math.ceil((fileBase64.length * 3) / 4);
-  if (sizeBytes > 5 * 1024 * 1024) throw new AppError('Resume upload must be 5MB or smaller.', 413);
+  validateResumeUpload(mimeType, fileBase64, fileName);
 
   const buffer = Buffer.from(fileBase64, 'base64');
   try {

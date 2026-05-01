@@ -22,6 +22,15 @@ interface ApiEnvelope<T> {
   message?: string;
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 const authHeaders = async () => {
   const token = (await cookies()).get('session')?.value;
 
@@ -75,6 +84,16 @@ export async function getApplications() {
   return response.data;
 }
 
+export async function getApplication(id: string) {
+  const response = await backendFetch<ApiEnvelope<Application>>(`/api/applications/${id}`);
+  return response.data;
+}
+
+export async function getSavedJobs(query = '') {
+  const response = await backendFetch<ApiEnvelope<{ items: Array<{ _id: string; jobId: Job; createdAt?: string }>; pagination: PaginationMeta }>>(`/api/saved-jobs${query}`);
+  return response.data;
+}
+
 export async function getAnalytics() {
   const response = await backendFetch<ApiEnvelope<AnalyticsSummary>>('/api/applications/analytics');
   return response.data;
@@ -96,7 +115,25 @@ export async function getTodayJobs() {
 }
 
 export async function getJobs(query = '') {
-  const response = await backendFetch<ApiEnvelope<Job[]>>(`/api/jobs${query}`);
+  const response = await backendFetch<ApiEnvelope<Job[] | { items: Job[] }>>(`/api/jobs${query}`);
+  return Array.isArray(response.data) ? response.data : response.data.items;
+}
+
+export async function getJobsPage(query = '') {
+  const response = await backendFetch<ApiEnvelope<Job[] | { items: Job[]; pagination: PaginationMeta }>>(`/api/jobs${query}`);
+  if (Array.isArray(response.data)) {
+    return {
+      items: response.data,
+      pagination: {
+        page: 1,
+        limit: response.data.length || 10,
+        total: response.data.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false
+      }
+    };
+  }
   return response.data;
 }
 
@@ -123,6 +160,11 @@ export async function getResumes() {
   return response.data;
 }
 
+export async function getResume(id: string) {
+  const response = await backendFetch<ApiEnvelope<Resume>>(`/api/resumes/${id}`);
+  return response.data;
+}
+
 export async function getDailyDigest() {
   const response = await backendFetch<ApiEnvelope<DailyDigest>>('/api/daily-digest');
   return response.data;
@@ -135,5 +177,65 @@ export async function getPortfolio() {
 
 export async function getPublicPortfolio(username: string) {
   const response = await backendFetch<ApiEnvelope<Portfolio>>(`/api/portfolio/public/${username}`);
+  return response.data;
+}
+
+export async function getMyCompany() {
+  const response = await backendFetch<ApiEnvelope<any>>('/api/company/me');
+  return response.data;
+}
+
+export async function getEmployerJobs(query = '') {
+  const response = await backendFetch<ApiEnvelope<{ items: Job[]; pagination: PaginationMeta }>>(`/api/employer/jobs${query}`);
+  return response.data;
+}
+
+export async function getEmployerJob(id: string) {
+  const response = await backendFetch<ApiEnvelope<Job>>(`/api/employer/jobs/${id}`);
+  return response.data;
+}
+
+export async function getEmployerCandidates(query = '') {
+  const response = await backendFetch<ApiEnvelope<{ items: Application[]; pagination: PaginationMeta }>>(`/api/employer/candidates${query}`);
+  return response.data;
+}
+
+export async function getEmployerCandidate(id: string) {
+  const response = await backendFetch<ApiEnvelope<Application>>(`/api/employer/candidates/${id}`);
+  return response.data;
+}
+
+export async function getAdminStats() {
+  const response = await backendFetch<ApiEnvelope<any>>('/api/admin/stats');
+  return response.data;
+}
+
+export async function getAdminUsers(query = '') {
+  const response = await backendFetch<ApiEnvelope<{ items: any[]; pagination: PaginationMeta }>>(`/api/admin/users${query}`);
+  return response.data;
+}
+
+export async function getAdminCompanies(query = '') {
+  const response = await backendFetch<ApiEnvelope<{ items: any[]; pagination: PaginationMeta }>>(`/api/admin/companies${query}`);
+  return response.data;
+}
+
+export async function getAdminJobs(query = '') {
+  const response = await backendFetch<ApiEnvelope<{ items: any[]; pagination: PaginationMeta }>>(`/api/admin/jobs${query}`);
+  return response.data;
+}
+
+export async function getAdminApplications(query = '') {
+  const response = await backendFetch<ApiEnvelope<{ items: Application[]; pagination: PaginationMeta }>>(`/api/admin/applications${query}`);
+  return response.data;
+}
+
+export async function getAdminAuditLogs(query = '') {
+  const response = await backendFetch<ApiEnvelope<{ items: any[]; pagination: PaginationMeta }>>(`/api/admin/audit-logs${query}`);
+  return response.data;
+}
+
+export async function getNotifications(query = '') {
+  const response = await backendFetch<ApiEnvelope<{ items: any[]; pagination: PaginationMeta; unreadCount: number }>>(`/api/notifications${query}`);
   return response.data;
 }

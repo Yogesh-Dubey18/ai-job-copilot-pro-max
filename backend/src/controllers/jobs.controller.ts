@@ -4,6 +4,8 @@ import Job from '../models/Job';
 import { normalizeScrapedJob } from '../services/scraper.service';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
+import { getPagination, paginated } from '../utils/pagination';
+import { publicJobById } from '../utils/publicJob';
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -23,8 +25,8 @@ const jobSchema = z.object({
 
 const applicationSchema = z.object({
   jobId: z.string().optional(),
-  company: z.string().min(1),
-  title: z.string().min(1),
+  company: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
   status: z.enum(applicationStatuses).default('saved'),
   appliedDate: z.string().optional(),
   followUpDate: z.string().optional(),
@@ -36,6 +38,8 @@ const applicationSchema = z.object({
   coverLetter: z.string().optional(),
   recruiterEmail: z.string().optional(),
   missingSkills: z.array(z.string()).optional()
+}).refine((data) => Boolean(data.jobId || (data.company && data.title)), {
+  message: 'Provide a jobId or both company and title.'
 });
 
 const manualApplySchema = z.object({
@@ -73,6 +77,61 @@ const responseSchema = z.object({
   tone: z.enum(['professional', 'confident', 'polite', 'hinglish-friendly', 'short']).default('professional')
 });
 
+export const buildPublicJobFilter = (queryParams: Record<string, unknown>) => {
+  const clauses: Record<string, any>[] = [
+    { $or: [{ status: 'published' }, { status: { $exists: false } }] },
+    { $or: [{ moderationStatus: 'approved' }, { moderationStatus: { $exists: false } }] }
+  ];
+  const search = String(queryParams.query || queryParams.role || queryParams.q || '').trim();
+  const location = String(queryParams.location || '').trim();
+  const source = String(queryParams.source || '').trim();
+  const workplaceType = String(queryParams.workplaceType || '').trim();
+  const employmentType = String(queryParams.employmentType || '').trim();
+  const experienceLevel = String(queryParams.experienceLevel || '').trim();
+  const remote = String(queryParams.remote || '').trim();
+  const fresher = String(queryParams.fresher || '').trim() === 'true';
+  const internship = String(queryParams.internship || '').trim() === 'true';
+  const postedToday = String(queryParams.postedToday || '').trim() === 'true';
+
+  if (search) {
+    const terms = search.split(/\s+/).filter(Boolean).map(escapeRegex).join('|');
+    const searchRegex = new RegExp(terms, 'i');
+    clauses.push({
+      $or: [{ title: searchRegex }, { company: searchRegex }, { description: searchRegex }, { skills: searchRegex }]
+    });
+  }
+  if (location) clauses.push({ location: new RegExp(escapeRegex(location), 'i') });
+  if (source) clauses.push({ source });
+  if (workplaceType) clauses.push({ workplaceType });
+  if (employmentType) clauses.push({ employmentType });
+  if (experienceLevel) clauses.push({ experienceLevel: new RegExp(escapeRegex(experienceLevel), 'i') });
+  if (queryParams.skills) {
+    const skills = String(queryParams.skills)
+      .split(',')
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+    if (skills.length) clauses.push({ skills: { $in: skills.map((skill) => new RegExp(`^${escapeRegex(skill)}$`, 'i')) } });
+  }
+  if (queryParams.salaryMin) clauses.push({ salaryMax: { $gte: Number(queryParams.salaryMin) } });
+  if (queryParams.salaryMax) clauses.push({ salaryMin: { $lte: Number(queryParams.salaryMax) } });
+  if (remote === 'true') clauses.push({ $or: [{ remote: true }, { workplaceType: { $in: ['remote', 'hybrid'] } }, { remoteType: { $in: ['remote', 'hybrid'] } }] });
+  if (remote === 'false') clauses.push({ $or: [{ remote: false }, { workplaceType: 'onsite' }, { remoteType: 'onsite' }] });
+  if (fresher) clauses.push({ description: new RegExp('fresher|entry|junior|0-1|0 to 1', 'i') });
+  if (internship) clauses.push({ $or: [{ title: new RegExp('intern|internship', 'i') }, { employmentType: 'internship' }, { description: new RegExp('intern|internship', 'i') }] });
+  if (postedToday) {
+    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+    clauses.push({ $or: [{ postedAt: { $gte: startOfDay } }, { createdAt: { $gte: startOfDay } }] });
+  }
+
+  return { $and: clauses };
+};
+
+export const publicJobSort = (sortBy: unknown) => {
+  if (sortBy === 'salaryHigh') return { salaryMax: -1, salaryMin: -1, createdAt: -1 } as Record<string, 1 | -1>;
+  if (sortBy === 'salaryLow') return { salaryMin: 1, salaryMax: 1, createdAt: -1 } as Record<string, 1 | -1>;
+  return { createdAt: -1 } as Record<string, 1 | -1>;
+};
+
 export const listJobs = asyncHandler(async (req, res) => {
   if ((await Job.countDocuments()) === 0) {
     await Promise.all(
@@ -105,36 +164,13 @@ export const listJobs = asyncHandler(async (req, res) => {
     );
   }
 
-  const clauses: Record<string, any>[] = [];
-  const search = String(req.query.role || req.query.q || '').trim();
-  const location = String(req.query.location || '').trim();
-  const source = String(req.query.source || '').trim();
-  const remote = String(req.query.remote || '').trim();
-  const fresher = String(req.query.fresher || '').trim() === 'true';
-  const internship = String(req.query.internship || '').trim() === 'true';
-  const postedToday = String(req.query.postedToday || '').trim() === 'true';
-
-  if (search) {
-    const terms = search.split(/\s+/).filter(Boolean).map(escapeRegex).join('|');
-    const searchRegex = new RegExp(terms, 'i');
-    clauses.push({
-      $or: [{ title: searchRegex }, { company: searchRegex }, { description: searchRegex }, { skills: searchRegex }]
-    });
-  }
-  if (location) clauses.push({ location: new RegExp(escapeRegex(location), 'i') });
-  if (source) clauses.push({ source });
-  if (remote === 'true') clauses.push({ remote: true });
-  if (remote === 'false') clauses.push({ remote: false });
-  if (fresher) clauses.push({ description: new RegExp('fresher|entry|junior|0-1|0 to 1', 'i') });
-  if (internship) clauses.push({ $or: [{ title: new RegExp('intern|internship', 'i') }, { description: new RegExp('intern|internship', 'i') }] });
-  if (postedToday) {
-    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
-    clauses.push({ $or: [{ postedAt: { $gte: startOfDay } }, { createdAt: { $gte: startOfDay } }] });
-  }
-
-  const query = clauses.length ? { $and: clauses } : {};
-  const jobs = await Job.find(query).sort({ createdAt: -1 }).limit(100);
-  res.json({ success: true, data: jobs });
+  const { page, limit, skip } = getPagination(req);
+  const query = buildPublicJobFilter(req.query);
+  const [jobs, total] = await Promise.all([
+    Job.find(query).populate('companyId').sort(publicJobSort(req.query.sortBy)).skip(skip).limit(limit),
+    Job.countDocuments(query)
+  ]);
+  res.json({ success: true, message: 'Jobs fetched', data: paginated(jobs, page, limit, total) });
 });
 
 export const createJob = asyncHandler(async (req: any, res) => {
@@ -144,7 +180,13 @@ export const createJob = asyncHandler(async (req: any, res) => {
 });
 
 export const getJob = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.id);
+  const job = await Job.findOne({
+    _id: req.params.id,
+    $and: [
+      { $or: [{ status: 'published' }, { status: { $exists: false } }] },
+      { $or: [{ moderationStatus: 'approved' }, { moderationStatus: { $exists: false } }] }
+    ]
+  }).populate('companyId');
 
   if (!job) {
     throw new AppError('Job not found.', 404);
@@ -275,9 +317,22 @@ export const getApplication = asyncHandler(async (req: any, res) => {
 
 export const createApplication = asyncHandler(async (req: any, res) => {
   const data = applicationSchema.parse(req.body);
+  const job = data.jobId ? await Job.findOne(publicJobById(data.jobId)) : null;
+  if (data.jobId && !job) throw new AppError('Public job not found.', 404);
+  if (job) {
+    const duplicate = await Application.findOne({
+      userId: req.user.id,
+      jobId: job._id,
+      status: { $nin: ['withdrawn', 'rejected'] }
+    });
+    if (duplicate) throw new AppError('You already have an active application for this job.', 409);
+  }
   const application = await Application.create({
     ...data,
     userId: req.user.id,
+    jobId: job?._id || data.jobId,
+    company: data.company || job?.company || '',
+    title: data.title || job?.title || '',
     appliedDate: data.appliedDate ? new Date(data.appliedDate) : undefined,
     followUpDate: data.followUpDate ? new Date(data.followUpDate) : undefined,
     portalSource: data.sourcePlatform || '',
@@ -286,6 +341,21 @@ export const createApplication = asyncHandler(async (req: any, res) => {
   });
 
   res.status(201).json({ success: true, data: application });
+});
+
+export const withdrawApplication = asyncHandler(async (req: any, res) => {
+  const application = await Application.findOne({ _id: req.params.id, userId: req.user.id });
+  if (!application) throw new AppError('Application not found.', 404);
+  application.status = 'withdrawn';
+  application.timeline.push({
+    status: 'withdrawn',
+    note: 'Candidate withdrew the application.',
+    source: 'candidate',
+    nextAction: 'Review similar jobs and continue applying.',
+    date: new Date()
+  });
+  await application.save();
+  res.json({ success: true, data: application });
 });
 
 export const updateApplicationStatus = asyncHandler(async (req: any, res) => {

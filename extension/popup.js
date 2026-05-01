@@ -17,7 +17,10 @@ async function send(type) {
     const job = await scrape();
     if (type === 'SAVE_JOB') {
       const saved = await chrome.runtime.sendMessage({ type: 'SAVE_JOB', payload: job });
-      statusBox.textContent = JSON.stringify(saved, null, 2);
+      if (!saved?.ok) {
+        throw new Error(saved?.error || 'Could not save this job.');
+      }
+      statusBox.textContent = `Saved: ${saved.payload?.data?.title || job.title}`;
       return;
     }
     await chrome.storage.local.set({ lastScrapeResult: { ok: true, savedAt: new Date().toISOString(), action: type, job } });

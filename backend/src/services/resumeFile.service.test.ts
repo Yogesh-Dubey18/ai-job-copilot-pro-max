@@ -31,4 +31,16 @@ describe('resume file parsing and export', () => {
     expect(isReadableResumeText(raw)).toBe(false);
     await expect(parseResumeFile('application/pdf', Buffer.from(raw).toString('base64'))).resolves.toBe('');
   });
+
+  it('rejects unsupported resume MIME types', async () => {
+    await expect(parseResumeFile('image/png', Buffer.from('not a resume').toString('base64'))).rejects.toThrow(
+      'Only PDF, DOC, DOCX, or TXT resumes are supported.'
+    );
+  });
+
+  it('rejects mismatched resume file extensions', async () => {
+    await expect(parseResumeFile('application/pdf', Buffer.from('resume text').toString('base64'), '', 'resume.txt')).rejects.toThrow(
+      'Resume file extension does not match the uploaded file type.'
+    );
+  });
 });

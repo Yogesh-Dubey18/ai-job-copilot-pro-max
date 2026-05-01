@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import User from '../models/User';
+import User, { normalizeUserRole } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { generateToken } from '../utils/generateToken';
@@ -10,7 +10,8 @@ import { sendEmail } from '../services/email.service';
 const registerSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(8)
+  password: z.string().min(8),
+  role: z.enum(['job_seeker', 'employer']).optional()
 });
 
 const loginSchema = z.object({
@@ -23,7 +24,7 @@ const formatUser = (user: any) => ({
   id: user._id.toString(),
   name: user.name,
   email: user.email,
-  role: user.role,
+  role: normalizeUserRole(user.role),
   profile: user.profile
 });
 
@@ -40,6 +41,7 @@ export const register = asyncHandler(async (req, res) => {
     name: data.name,
     email: data.email.toLowerCase(),
     passwordHash,
+    role: data.role || 'job_seeker',
     emailVerified: false
   });
 

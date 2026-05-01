@@ -1,5 +1,17 @@
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
+export class ApiError extends Error {
+  status: number;
+  errors: unknown[];
+
+  constructor(message: string, status: number, errors: unknown[] = []) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.errors = errors;
+  }
+}
+
 export async function api<T>(path: string, options: { method?: Method; body?: unknown } = {}): Promise<T> {
   const response = await fetch(path, {
     method: options.method || 'GET',
@@ -14,7 +26,7 @@ export async function api<T>(path: string, options: { method?: Method; body?: un
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.message || 'API request failed');
+    throw new ApiError(payload.message || 'API request failed', response.status, payload.errors || []);
   }
 
   return payload as T;

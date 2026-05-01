@@ -1,5 +1,14 @@
 import { z } from 'zod';
-import { generateApplyPack, generateWorkflow } from '../services/ai.service';
+import {
+  analyzeRejection,
+  evaluateInterviewAnswer,
+  generateApplyPack,
+  generateCoverLetter,
+  generateInterviewQuestions,
+  generateJobMatch,
+  generateResumeFeedback,
+  generateWorkflow
+} from '../services/ai.service';
 import { asyncHandler } from '../utils/asyncHandler';
 
 const applyPackSchema = z.object({
@@ -9,7 +18,7 @@ const applyPackSchema = z.object({
 
 export const createApplyPack = asyncHandler(async (req, res) => {
   const { profileText, jobDescription } = applyPackSchema.parse(req.body);
-  const pack = await generateApplyPack(profileText, jobDescription);
+  const pack = await generateApplyPack(profileText, jobDescription, (req as any).user?.id);
   res.json({ success: true, data: pack });
 });
 
@@ -23,7 +32,7 @@ const workflowSchema = z.object({
 
 export const createWorkflow = asyncHandler(async (req, res) => {
   const payload = workflowSchema.parse(req.body);
-  const data = await generateWorkflow(payload.kind, payload);
+  const data = await generateWorkflow(payload.kind, payload, (req as any).user?.id);
   res.json({ success: true, data });
 });
 
@@ -58,7 +67,7 @@ export const createCopilot = asyncHandler(async (req, res) => {
     portfolio: 'portfolio',
     today: 'next-step'
   } as const;
-  const workflow = await generateWorkflow(kindMap[payload.action], payload);
+  const workflow = await generateWorkflow(kindMap[payload.action], payload, (req as any).user?.id);
   const prefix =
     payload.mentorMode === 'hinglish'
       ? 'Hinglish mentor note: Seedha focus rakho, next best action yeh hai.'
@@ -102,4 +111,69 @@ export const companyReply = asyncHandler(async (req, res) => {
       fallback: true
     }
   });
+});
+
+export const jobMatch = asyncHandler(async (req, res) => {
+  const schema = z.object({
+    profileText: z.string().optional(),
+    resumeText: z.string().optional(),
+    jobDescription: z.string().min(1),
+    skills: z.array(z.string()).optional()
+  });
+  const data = schema.parse(req.body);
+  const result = await generateJobMatch(data, { userId: (req as any).user?.id });
+  res.json({ success: true, data: result });
+});
+
+export const resumeFeedback = asyncHandler(async (req, res) => {
+  const schema = z.object({ resumeText: z.string().min(1) });
+  const data = schema.parse(req.body);
+  const result = await generateResumeFeedback(data.resumeText, { userId: (req as any).user?.id });
+  res.json({ success: true, data: result });
+});
+
+export const coverLetter = asyncHandler(async (req, res) => {
+  const schema = z.object({
+    profileText: z.string().optional(),
+    resumeText: z.string().optional(),
+    jobDescription: z.string().min(1),
+    company: z.string().optional(),
+    tone: z.string().optional()
+  });
+  const data = schema.parse(req.body);
+  const result = await generateCoverLetter(data, { userId: (req as any).user?.id });
+  res.json({ success: true, data: result });
+});
+
+export const interviewQuestions = asyncHandler(async (req, res) => {
+  const schema = z.object({
+    role: z.string().optional(),
+    company: z.string().optional(),
+    jobDescription: z.string().optional(),
+    resumeText: z.string().optional()
+  });
+  const data = schema.parse(req.body);
+  const result = await generateInterviewQuestions(data, { userId: (req as any).user?.id });
+  res.json({ success: true, data: result });
+});
+
+export const interviewEvaluate = asyncHandler(async (req, res) => {
+  const schema = z.object({
+    question: z.string().min(1),
+    answer: z.string().min(1),
+    role: z.string().optional()
+  });
+  const data = schema.parse(req.body);
+  const result = await evaluateInterviewAnswer(data, { userId: (req as any).user?.id });
+  res.json({ success: true, data: result });
+});
+
+export const rejectionAnalysis = asyncHandler(async (req, res) => {
+  const schema = z.object({
+    rejectionText: z.string().min(1),
+    role: z.string().optional()
+  });
+  const data = schema.parse(req.body);
+  const result = await analyzeRejection(data, { userId: (req as any).user?.id });
+  res.json({ success: true, data: result });
 });
