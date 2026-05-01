@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, BriefcaseBusiness, ChevronDown, FileText, LayoutDashboard, LogOut } from 'lucide-react';
+import { Bell, Bot, BriefcaseBusiness, ChevronDown, FileText, LayoutDashboard, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -30,12 +30,17 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [role, setRole] = useState<'user' | 'admin'>('user');
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
       .then((response) => response.json())
       .then((payload) => setRole(payload.user?.role === 'admin' ? 'admin' : 'user'))
       .catch(() => setRole('user'));
+    fetch('/api/notifications', { credentials: 'include' })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => setUnreadCount(Number(payload?.data?.unreadCount || 0)))
+      .catch(() => setUnreadCount(0));
   }, []);
 
   const logout = async () => {
@@ -79,6 +84,10 @@ export function Navbar() {
               ))}
             </div>
           </div>
+          <Link href="/notifications" className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100" title="Notifications">
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 ? <span className="absolute right-1 top-1 rounded-full bg-rose-600 px-1.5 text-[10px] font-bold text-white">{unreadCount}</span> : null}
+          </Link>
           <button
             type="button"
             onClick={logout}

@@ -1,48 +1,68 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { EmptyState } from '@/components/EmptyState';
 import { JobActions } from '@/components/JobActions';
 import { ManualApplyForm } from '@/components/ManualApplyForm';
-import { getJob, getJobScore, getSessionToken, getTodayJobs } from '@/lib/server/backend';
+import { MatchScoreBadge } from '@/components/MatchScoreBadge';
+import { StatCard } from '@/components/StatCard';
+import { getJob, getJobScore, getJobs, getSessionToken } from '@/lib/server/backend';
+import { ScoreBreakdown } from '@/types';
+
+const incompleteScore: ScoreBreakdown = {
+  profileIncomplete: true,
+  finalScore: null,
+  jobFitScore: null,
+  atsMatchScore: null,
+  skillMatchScore: null,
+  experienceFitScore: null,
+  locationFitScore: null,
+  salaryFitScore: null,
+  companyQualityScore: 0,
+  scamRiskScore: 0,
+  matchedSkills: [],
+  missingSkills: [],
+  applyPriority: 'Profile incomplete',
+  aiRecommendation: 'Sign in and complete your profile to calculate an AI match score.'
+};
 
 export default async function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const token = await getSessionToken();
-  if (!token) redirect('/login');
-
   const { jobId } = await params;
-  const [job, jobs, score] = await Promise.all([getJob(jobId), getTodayJobs(), getJobScore(jobId)]);
+  const [job, jobs, score] = await Promise.all([
+    getJob(jobId),
+    getJobs('?limit=4'),
+    token ? getJobScore(jobId).catch(() => incompleteScore) : Promise.resolve(incompleteScore)
+  ]);
   const hasOperationalUrl = Boolean(job.url && !/^https?:\/\/(www\.)?example\.com/i.test(job.url));
   const similarJobs = jobs
     .filter((item) => item._id !== job._id && (item.title.includes(job.title.split(' ')[0]) || item.company !== job.company))
     .slice(0, 3);
   const scoreCards = [
-    ['Job Fit Score', `${score.jobFitScore}%`],
-    ['ATS Match Score', `${score.atsMatchScore}%`],
-    ['Skill Match Score', `${score.skillMatchScore}%`],
-    ['Experience Fit', `${score.experienceFitScore}%`],
-    ['Location Fit', `${score.locationFitScore}%`],
-    ['Salary Fit', `${score.salaryFitScore}%`],
-    ['Source Trust', `${score.companyQualityScore}%`],
-    ['Scam Risk', `${score.scamRiskScore}%`],
-    ['Decision', score.applyPriority]
+    ['Job fit', score.jobFitScore === null ? 'Profile needed' : `${score.jobFitScore}%`],
+    ['ATS match', score.atsMatchScore === null ? 'Profile needed' : `${score.atsMatchScore}%`],
+    ['Skills', score.skillMatchScore === null ? 'Profile needed' : `${score.skillMatchScore}%`],
+    ['Experience', score.experienceFitScore === null ? 'Profile needed' : `${score.experienceFitScore}%`],
+    ['Location', score.locationFitScore === null ? 'Profile needed' : `${score.locationFitScore}%`],
+    ['Salary', score.salaryFitScore === null ? 'Profile needed' : `${score.salaryFitScore}%`]
   ];
 
   return (
     <AppShell>
       <main className="mx-auto min-h-screen max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">{job.source || 'job board'}</p>
-        <h1 className="mt-2 text-4xl font-black tracking-tight">{job.title}</h1>
-        <p className="mt-2 text-lg text-slate-600">{job.company} - {job.location || 'Flexible'}</p>
-        <div className="mt-6">
-          <JobActions jobId={job._id} />
+        <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-black tracking-tight">{job.title}</h1>
+            <p className="mt-2 text-lg text-slate-600">{job.company} · {job.location || 'Flexible'}</p>
+          </div>
+          <MatchScoreBadge score={score.finalScore} />
         </div>
+
+        <div className="mt-6">{token ? <JobActions jobId={job._id} /> : <Link href="/login" className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Sign in to save or apply</Link>}</div>
 
         <section className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {scoreCards.map(([label, value]) => (
-            <div key={label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-              <p className="mt-2 text-lg font-black">{value}</p>
-            </div>
+            <StatCard key={label} label={label} value={value} />
           ))}
         </section>
 
@@ -50,9 +70,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
           <h2 className="text-xl font-bold">Job description</h2>
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
             <div><dt className="font-semibold text-slate-500">Salary</dt><dd>{job.salaryMin || job.salaryMax ? `${job.salaryMin || 0} - ${job.salaryMax || 'open'}` : 'Not listed'}</dd></div>
-            <div><dt className="font-semibold text-slate-500">Workplace</dt><dd>{job.remote ? 'Remote / hybrid' : 'Onsite or unspecified'}</dd></div>
-            <div><dt className="font-semibold text-slate-500">Experience</dt><dd>{/senior|lead|5\+/i.test(job.description) ? 'Experienced' : 'Fresher-friendly / general'}</dd></div>
-            <div><dt className="font-semibold text-slate-500">Source</dt><dd>{job.source || 'manual'}</dd></div>
+            <div><dt className="font-semibold text-slate-500">Workplace</dt><dd>{job.workplaceType || (job.remote ? 'remote' : 'unspecified')}</dd></div>
+            <div><dt className="font-semibold text-slate-500">Employment</dt><dd>{job.employmentType?.replaceAll('_', ' ') || 'Not listed'}</dd></div>
+            <div><dt className="font-semibold text-slate-500">Experience</dt><dd>{job.experienceLevel || 'General'}</dd></div>
           </dl>
           <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{job.description}</p>
 
@@ -60,7 +80,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
             <div>
               <h3 className="font-bold">Matched skills</h3>
               <div className="mt-2 flex flex-wrap gap-2">
-                {(score.matchedSkills.length ? score.matchedSkills : ['Add resume text for better matching']).map((skill) => (
+                {(score.matchedSkills.length ? score.matchedSkills : ['Complete profile for matching']).map((skill) => (
                   <span key={skill} className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">{skill}</span>
                 ))}
               </div>
@@ -92,19 +112,17 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
           ) : null}
         </section>
 
-        <section className="mt-8">
-          <ManualApplyForm jobId={job._id} />
-        </section>
+        {token ? <section className="mt-8"><ManualApplyForm jobId={job._id} /></section> : null}
 
         <section className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold">Similar jobs</h2>
           <div className="mt-4 grid gap-3">
             {similarJobs.length === 0 ? (
-              <p className="text-sm text-slate-500">No similar roles yet. Sync daily jobs to add more matches.</p>
+              <EmptyState title="No similar roles yet" description="Check back after more public jobs are indexed." />
             ) : (
               similarJobs.map((item) => (
                 <Link key={item._id} href={`/jobs/${item._id}`} className="rounded-md border border-slate-200 px-4 py-3 text-sm font-semibold hover:bg-slate-50">
-                  {item.title} - {item.company}
+                  {item.title} · {item.company}
                 </Link>
               ))
             )}

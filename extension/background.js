@@ -2,30 +2,55 @@ const DEFAULT_API_URL = 'https://backend-steel-three-33.vercel.app';
 
 async function getBackendUrl() {
   const stored = await chrome.storage.sync.get(['backendUrl']);
-  return stored.backendUrl || DEFAULT_API_URL;
+  return (stored.backendUrl || DEFAULT_API_URL).replace(/\/$/, '');
+}
+
+function cleanJob(job) {
+  const title = String(job?.title || '').trim();
+  const company = String(job?.company || '').trim();
+  const description = String(job?.description || '').trim();
+
+  if (!title || !company || description.length < 40) {
+    throw new Error('This page does not look like a complete job post.');
+  }
+
+  return {
+    title,
+    company,
+    location: String(job?.location || '').trim(),
+    description: description.slice(0, 12000),
+    url: String(job?.url || '').trim(),
+    source: 'chrome-extension'
+  };
 }
 
 async function saveJob(job) {
   const backendUrl = await getBackendUrl();
+  const payloadJob = cleanJob(job);
   const response = await fetch(`${backendUrl}/api/jobs/save-from-extension`, {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(job)
+    body: JSON.stringify(payloadJob)
   });
 
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.message || 'Failed to save job');
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Sign in to AI Job Copilot as a job seeker, then try saving again.');
+    }
+    throw new Error(payload.message || 'Could not save this job.');
   }
 
   await chrome.storage.local.set({
     lastScrapeResult: {
       ok: true,
       savedAt: new Date().toISOString(),
-      job: payload.data
+      job: payload.data,
+      backendUrl
     }
   });
 

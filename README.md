@@ -1,42 +1,89 @@
-# AI Job Copilot Pro MAX
+# AI Job Copilot Portal Pro MAX
 
-AI Job Copilot Pro MAX is a production-ready full-stack job search mission control app. It includes a Node.js, Express, TypeScript, MongoDB backend, a Next.js App Router frontend, and a Manifest V3 Chrome extension for saving job pages into the backend.
+AI Job Copilot Portal Pro MAX is a production-oriented AI job search and hiring SaaS. It combines a job seeker career operating system, employer hiring portal, admin moderation console, AI assistance, resume parsing, and a Manifest V3 Chrome extension.
+
+## Features
+
+- Job seekers: secure auth, profile, resume upload/parsing, AI resume feedback, public job search, saved jobs, applications, match scoring, cover letters, interview prep, notifications, and extension job capture.
+- Employers: company profile, job drafts, publish/archive workflow, applicant lists, candidate notes, status updates, interview scheduling, and hiring dashboard pages.
+- Admins: platform stats, users, companies, jobs, applications, moderation, audit logs, and system settings.
+- AI: Gemini/OpenAI-style provider abstraction with strict JSON parsing, one retry path, AI usage tracking, and rule-based fallback when keys are missing.
+- Security: httpOnly cookie/BFF auth pattern, backend JWT validation, RBAC, ownership checks, Helmet, rate limiting, CORS/origin checks, Zod validation, and safe resume upload validation.
+- Extension: Manifest V3 scraper that captures title, company, location, description, and URL, then saves jobs through the authenticated backend endpoint.
 
 ## Tech Stack
 
-- Backend: Node.js, Express, TypeScript, MongoDB, Mongoose, JWT, bcryptjs, Helmet, rate limiting
-- AI: Google Gemini through `@google/generative-ai`
-- Frontend: Next.js App Router, React, TypeScript, Tailwind CSS, Framer Motion
-- Extension: Chrome Manifest V3 service worker and content script
+- Frontend: Next.js App Router, React, TypeScript, Tailwind CSS, Vitest, reusable SaaS UI components.
+- Backend: Node.js, Express, TypeScript, MongoDB Atlas, Mongoose, JWT, bcryptjs, Zod, Helmet, express-rate-limit.
+- AI: Gemini or OpenAI provider abstraction with fallback.
+- Files: PDF, DOCX, and TXT resume parsing with MIME/extension/size checks.
+- Deployment: Vercel frontend, Render or current backend deployment, MongoDB Atlas.
 
 ## Folder Structure
 
 ```text
 ai-job-copilot-monorepo/
-├── backend/
-├── frontend/
-└── extension/
+  backend/
+    src/
+      config/
+      controllers/
+      middleware/
+      models/
+      routes/
+      scripts/
+      services/
+      utils/
+  frontend/
+    src/
+      app/
+      components/
+      lib/
+      types/
+  extension/
+  docs/
+  package.json
+  README.md
 ```
 
 ## Local Setup
 
+Install dependencies:
+
 ```bash
 npm install
+npm install --prefix backend
+npm install --prefix frontend
 ```
 
-Create backend env:
+Create environment files:
 
 ```bash
 cp backend/.env.example backend/.env
-```
-
-Create frontend env:
-
-```bash
 cp frontend/.env.example frontend/.env.local
 ```
 
-Update `backend/.env` with `MONGODB_URI`, `JWT_SECRET`, `FRONTEND_URL`, and optionally `GEMINI_API_KEY`.
+Minimum backend values:
+
+```text
+NODE_ENV=development
+PORT=5000
+MONGODB_URI=mongodb+srv://...
+JWT_SECRET=<at-least-24-characters>
+COOKIE_NAME=ai_job_token
+CORS_ORIGIN=http://localhost:3000
+FRONTEND_URL=http://localhost:3000
+AI_PROVIDER=gemini
+UPLOAD_DIR=uploads
+MAX_FILE_SIZE_MB=5
+```
+
+Minimum frontend values:
+
+```text
+NEXT_PUBLIC_API_URL=http://localhost:5000
+BACKEND_URL=http://localhost:5000
+NEXT_PUBLIC_APP_NAME=AI Job Copilot Portal Pro MAX
+```
 
 ## Run Locally
 
@@ -52,19 +99,11 @@ Frontend:
 npm run dev:frontend
 ```
 
-Open:
-
-```text
-http://localhost:3000
-```
-
-Docker local topology:
+Full dev mode:
 
 ```bash
-docker compose up --build
+npm run dev
 ```
-
-This starts MongoDB, the Express backend, and the Next.js frontend for long-running local development.
 
 Health check:
 
@@ -72,12 +111,38 @@ Health check:
 GET http://localhost:5000/api/health
 ```
 
-## Seed Admin
+## Seed Data
 
-Set `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in `backend/.env`, then run:
+The seed script is idempotent and creates demo users, companies, jobs, resumes, applications, saved jobs, notifications, interviews, and audit logs. It requires `MONGODB_URI`. It refuses to run in production unless `ALLOW_PRODUCTION_SEED=true`.
 
 ```bash
-npm run seed:admin --workspace backend
+npm run seed
+npm run seed --prefix backend
+```
+
+Demo credentials:
+
+```text
+Admin: admin@aijobportal.com / Admin@12345
+Employer: employer@aijobportal.com / Employer@12345
+Job seeker: seeker@aijobportal.com / Seeker@12345
+```
+
+## Test And Build
+
+```bash
+npm run build --prefix backend
+npm test --prefix backend
+npm run build --prefix frontend
+npm test --prefix frontend
+npm run build
+npm run test
+```
+
+Frontend lint:
+
+```bash
+npm run lint --prefix frontend
 ```
 
 ## Chrome Extension
@@ -86,68 +151,61 @@ npm run seed:admin --workspace backend
 2. Enable Developer Mode.
 3. Click Load unpacked.
 4. Select the `extension/` folder.
-5. Open a job page and click the extension icon to save the job.
+5. Log in to the web app as a job seeker.
+6. Open a job page and click the extension popup.
+7. Use Save job.
 
-The extension sends scraped jobs to:
+The extension uses `https://backend-steel-three-33.vercel.app` by default and allows an override in the extension options page. Saving requires an authenticated job seeker session; this prevents public spam writes.
 
-```text
-https://backend-steel-three-33.vercel.app/api/jobs/save-from-extension
-```
+## Deployment
 
-For local development, set `backendUrl` in `chrome.storage.sync` to `http://localhost:5000` or update the default in `extension/background.js`.
+Frontend on Vercel:
 
-## Backend Deployment on Render
+- Root directory: `frontend`
+- Build command: `npm run build`
+- Environment:
+  - `NEXT_PUBLIC_API_URL=https://your-backend-url`
+  - `BACKEND_URL=https://your-backend-url`
+  - `NEXT_PUBLIC_APP_NAME=AI Job Copilot Portal Pro MAX`
 
-Create a Render Web Service:
+Backend on Render:
 
 - Root directory: `backend`
 - Build command: `npm install && npm run build`
 - Start command: `npm start`
+- Environment:
+  - `NODE_ENV=production`
+  - `PORT=5000`
+  - `MONGODB_URI=<MongoDB Atlas URI>`
+  - `JWT_SECRET=<strong secret>`
+  - `JWT_EXPIRES_IN=7d`
+  - `COOKIE_NAME=ai_job_token`
+  - `CORS_ORIGIN=https://your-frontend-url`
+  - `FRONTEND_URL=https://your-frontend-url`
+  - `AI_PROVIDER=gemini`
+  - `GEMINI_API_KEY=<optional>`
+  - `OPENAI_API_KEY=<optional>`
+  - `UPLOAD_DIR=uploads`
+  - `MAX_FILE_SIZE_MB=5`
 
-The root `render.yaml` also contains a ready Render Blueprint for the backend service.
+More deployment details are in [docs/deployment.md](docs/deployment.md).
 
-Environment variables:
+## Common Errors
 
-```text
-PORT=5000
-NODE_ENV=production
-MONGODB_URI=<your MongoDB connection string>
-JWT_SECRET=<strong secret>
-JWT_EXPIRES_IN=7d
-FRONTEND_URL=<your Vercel frontend URL>
-GEMINI_API_KEY=<your Gemini key>
-ADZUNA_APP_ID=<optional>
-ADZUNA_APP_KEY=<optional>
-ADMIN_NAME=Admin User
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=<strong password>
-```
+- Cookie login fails cross-domain: verify `FRONTEND_URL`, `CORS_ORIGIN`, production cookie `sameSite/secure`, and HTTPS on both apps.
+- Seed does not run: set `MONGODB_URI`; production requires `ALLOW_PRODUCTION_SEED=true`.
+- Resume upload rejected: use PDF, DOCX, or TXT under `MAX_FILE_SIZE_MB`; scanned/image-only PDFs may not extract readable text.
+- AI returns fallback: configure the selected provider key or keep fallback mode for no-cost demos.
+- Extension cannot save: sign in as a job seeker and set the backend URL in extension options.
 
-## Frontend Deployment on Vercel
+## Production Checklist
 
-Create a Vercel project:
-
-- Root directory: `frontend`
-- Framework preset: Next.js
-- Build command: `npm run build`
-
-The `frontend/vercel.json` file is included for Vercel project defaults.
-
-Environment variable:
-
-```text
-NEXT_PUBLIC_API_URL=https://your-render-backend-url
-```
-
-After the frontend is deployed, update Render `FRONTEND_URL` with the Vercel URL.
-
-## GitHub Push
-
-```bash
-git init
-git branch -M main
-git remote add origin <my_repo_url>
-git add .
-git commit -m "Initial AI Job Copilot Pro MAX"
-git push -u origin main
-```
+- `JWT_SECRET` is strong and not committed.
+- `MONGODB_URI` points to MongoDB Atlas.
+- `CORS_ORIGIN` and `FRONTEND_URL` match the live frontend.
+- `NEXT_PUBLIC_API_URL` and `BACKEND_URL` match the live backend.
+- `NODE_ENV=production`.
+- Health route works.
+- Register/login/logout work.
+- Dashboards, jobs, applications, resume upload, AI fallback, and extension save flow are verified.
+- No real `.env`, `.env.local`, `.vercel`, `node_modules`, `.next`, or `dist` folders are tracked.

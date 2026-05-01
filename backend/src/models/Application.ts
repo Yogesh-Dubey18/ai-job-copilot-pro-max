@@ -53,6 +53,8 @@ const applicationSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job' },
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+    resumeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Resume' },
     company: { type: String, required: true, trim: true },
     title: { type: String, required: true, trim: true },
     status: {
@@ -66,7 +68,9 @@ const applicationSchema = new mongoose.Schema(
     contactName: { type: String, default: '' },
     recruiterContact: { type: String, default: '' },
     notes: { type: String, default: '' },
+    answers: { type: mongoose.Schema.Types.Mixed, default: [] },
     matchScore: { type: Number, min: 0, max: 100 },
+    matchDetails: { type: mongoose.Schema.Types.Mixed, default: {} },
     resumeVersionUsed: { type: String, default: '' },
     coverLetterUsed: { type: String, default: '' },
     manualChecklist: {
@@ -82,12 +86,23 @@ const applicationSchema = new mongoose.Schema(
     recruiterEmail: { type: String, default: '' },
     missingSkills: [{ type: String, trim: true }],
     timeline: { type: [timelineSchema], default: [] },
+    employerNotes: {
+      type: [
+        {
+          note: { type: String, required: true },
+          createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+          createdAt: { type: Date, default: Date.now }
+        }
+      ],
+      default: []
+    },
     responses: { type: [responseSchema], default: [] }
   },
   { timestamps: true }
 );
 
 applicationSchema.index({ userId: 1, status: 1 });
+applicationSchema.index({ jobId: 1, status: 1 });
 
 export type ApplicationDocument = InferSchemaType<typeof applicationSchema> & {
   _id: mongoose.Types.ObjectId;

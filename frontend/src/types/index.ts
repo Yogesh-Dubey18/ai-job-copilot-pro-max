@@ -25,6 +25,8 @@ export interface Application {
   followUpDate?: string;
   appliedDate?: string;
   resumeVersionUsed?: string;
+  coverLetterUsed?: string;
+  coverLetter?: string;
   portalSource?: string;
   recruiterContact?: string;
   notes?: string;
@@ -105,6 +107,11 @@ export interface Job {
   salaryMin?: number;
   salaryMax?: number;
   remote?: boolean;
+  workplaceType?: 'remote' | 'hybrid' | 'onsite';
+  employmentType?: 'full_time' | 'part_time' | 'contract' | 'internship';
+  experienceLevel?: string;
+  moderationStatus?: string;
+  status?: string;
   skills?: string[];
   createdAt?: string;
 }
@@ -156,6 +163,15 @@ export interface Resume {
     projects?: string;
   };
   atsScore: number | null;
+  aiScore?: number | null;
+  aiSuggestions?: {
+    missingSkills?: string[];
+    weakSections?: string[];
+    atsTips?: string[];
+    keywordImprovements?: string[];
+    summaryImprovement?: string;
+    projectBulletImprovements?: string[];
+  };
   manualText?: string;
   extractionStatus?: 'parsed' | 'manual_text' | 'needs_manual_text';
   detectedSkills?: string[];
