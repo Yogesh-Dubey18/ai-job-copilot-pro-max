@@ -48,9 +48,14 @@ describe('portal UI foundation components', () => {
 
   it('renders confirmation dialogs when open', () => {
     const html = renderToStaticMarkup(
-      <ConfirmDialog open title="Archive job" description="This will hide the job from public search." onCancel={() => {}} onConfirm={() => {}} />
+      <ConfirmDialog
+        title="Archive job"
+        description="This will hide the job from public search."
+        actions={<button type="button">Confirm</button>}
+      />
     );
     expect(html).toContain('Archive job');
     expect(html).toContain('This will hide the job from public search.');
+    expect(html).toContain('Confirm');
   });
 });
